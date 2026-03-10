@@ -10,3 +10,5 @@ Original prompt: commit the current version as the initial commit, create an age
 - Added confirmation dialogs for new-run overwrite and full data deletion.
 - Upgraded Vite/tooling, added Vitest + Testing Library coverage, and exposed `window.render_game_to_text()` for smoke checks.
 - Verification pass complete: `npm test`, `npm run build`, `npm audit`, and a Playwright smoke run all passed.
+- Merged `codex/release-prep` back into `master`.
+- Added `ROGUELITE_DIRECTION.md` to map the next major shift toward meta progression, contracts, relics, and route choice.
