@@ -1,5 +1,9 @@
 # Version History
 
+## 1.2.3 - 2026-03-10
+
+- Added a credits view on the title screen with dev, prototype, Codex, and version attribution.
+
 ## 1.2.2 - 2026-03-10
 
 - Greatly expanded enemy banter with more varied lines and stronger fourth-wall jokes about the Dev, seeds, and RNG.

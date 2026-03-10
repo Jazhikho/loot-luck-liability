@@ -83,6 +83,22 @@ describe("Loot, Luck & Liability", () => {
     expect(newGame).toHaveBeenCalledTimes(1);
   });
 
+  it("opens credits from the title screen and shows the versioned credits block", async () => {
+    const user = userEvent.setup();
+
+    render(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={vi.fn()} goProfile={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: "Credits" }));
+
+    expect(screen.getByText("Jazhikho")).toBeInTheDocument();
+    expect(screen.getByText(/Claude Sonnet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Codex \(GPT 5\.4\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/v1\.2\.3/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Back to Title" }));
+    expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();
+  });
+
   it("requires confirmation before deleting all data", async () => {
     const nukeData = vi.fn();
     const user = userEvent.setup();
