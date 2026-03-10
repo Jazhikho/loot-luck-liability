@@ -31,6 +31,11 @@ if (!fs.existsSync(sourceIcon)) {
 
 ensureDir(publicDir);
 
+function needsRefresh(outputPaths) {
+  const sourceTime = fs.statSync(sourceIcon).mtimeMs;
+  return outputPaths.some((outputPath) => !fs.existsSync(outputPath) || fs.statSync(outputPath).mtimeMs < sourceTime);
+}
+
 async function writePng(outputPath, size, options = {}) {
   await sharp(sourceIcon)
     .resize(size, size, {
@@ -81,7 +86,15 @@ async function writeSplash(outputPath, width, height) {
     .toFile(outputPath);
 }
 
-run("npx", ["tauri", "icon", "LLL.png", "-o", path.join("src-tauri", "icons")]);
+const tauriIconOutputs = [
+  path.join(rootDir, "src-tauri", "icons", "icon.ico"),
+  path.join(rootDir, "src-tauri", "icons", "icon.icns"),
+  path.join(rootDir, "src-tauri", "icons", "128x128.png"),
+];
+
+if (needsRefresh(tauriIconOutputs)) {
+  run("npx", ["tauri", "icon", "LLL.png", "-o", path.join("src-tauri", "icons")]);
+}
 
 await writePng(path.join(publicDir, "favicon.png"), 128);
 
