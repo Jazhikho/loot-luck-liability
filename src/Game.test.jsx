@@ -36,7 +36,7 @@ describe("Loot & Liability", () => {
 
     render(<Game />);
 
-    expect(await screen.findByText("The Merchant's Shop")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "The Broker's Snug" })).toBeInTheDocument();
   });
 
   it("awards a dungeon clear only after returning safely from the deepest floor", async () => {
@@ -46,24 +46,24 @@ describe("Loot & Liability", () => {
     render(<Game />);
 
     await user.click(screen.getByRole("button", { name: "Start Adventuring" }));
-    await user.click(screen.getByRole("button", { name: /Dungeon/i }));
-    await user.click(screen.getByRole("button", { name: /The Slightly Damp Cave/i }));
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+    await user.click(screen.getByRole("button", { name: /The Clover Cellar/i }));
 
     expect(await screen.findByRole("heading", { name: /Floor 1\/3/ })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Descend to Floor 2/i }));
     await user.click(screen.getByRole("button", { name: /Descend to Floor 3/i }));
 
-    await user.click(screen.getByRole("button", { name: "Stats" }));
+    await user.click(screen.getByRole("button", { name: "Ledger" }));
     const beforeClearCard = screen.getByText("Dungeons Cleared").parentElement;
     expect(within(beforeClearCard).getByText("0")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Back" }));
-    await user.click(screen.getByRole("button", { name: /Retreat to Shop/i }));
+    await user.click(screen.getByRole("button", { name: /Retreat to Town/i }));
 
-    expect(await screen.findByText("The Merchant's Shop")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "The Broker's Snug" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Stats" }));
+    await user.click(screen.getByRole("button", { name: "Ledger" }));
     const afterClearCard = screen.getByText("Dungeons Cleared").parentElement;
     expect(within(afterClearCard).getByText("1")).toBeInTheDocument();
   });
@@ -75,10 +75,10 @@ describe("Loot & Liability", () => {
 
     render(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={newGame} goProfile={vi.fn()} />);
 
-    await user.click(screen.getByRole("button", { name: "New Game" }));
+    await user.click(screen.getByRole("button", { name: "Start a Fresh Misadventure" }));
     expect(newGame).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Start New Run" }));
+    await user.click(screen.getByRole("button", { name: "Start Fresh Run" }));
     expect(newGame).toHaveBeenCalledTimes(1);
   });
 
@@ -118,6 +118,100 @@ describe("Loot & Liability", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: /Potion \(2\)/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Tonic \(2\)/i })).toBeDisabled();
+  });
+
+  it("buys run luck upgrades at the fixed cost and updates the display", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 2,
+        view: "shop",
+        p: { hp: 50, mhp: 50, atk: 5, def: 2, gold: 60, wlv: 1, alv: 1, pot: 2, luck: 0 },
+        inv: [],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    expect(await screen.findByText("Base Luck 0. Active Luck 0. Lucky cargo in hand: 0.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Luck +1 (20g)" }));
+
+    expect(screen.getByText("Base Luck 1. Active Luck 1. Lucky cargo in hand: 0.")).toBeInTheDocument();
+    expect(screen.getByText("Gold 40g")).toBeInTheDocument();
+    expect(screen.getByText("Luck 1/1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Luck +1 (35g)" })).toBeInTheDocument();
+  });
+
+  it("removes carried luck immediately when lucky cargo is sold", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 2,
+        view: "shop",
+        p: { hp: 50, mhp: 50, atk: 5, def: 2, gold: 10, wlv: 1, alv: 1, pot: 2, luck: 0 },
+        inv: [{ id: "lucky-1", name: "Lucky Ledger", value: 50, emoji: "L", rarity: "rare", luck: 2 }],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    expect(await screen.findByText("Luck 0/2")).toBeInTheDocument();
+    expect(screen.getByText("Base Luck 0. Active Luck 2. Lucky cargo in hand: 1.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "50g" }));
+
+    expect(screen.getByText("Luck 0/0")).toBeInTheDocument();
+    expect(screen.getByText("Base Luck 0. Active Luck 0. Lucky cargo in hand: 0.")).toBeInTheDocument();
+    expect(screen.getByText("Gold 60g")).toBeInTheDocument();
+  });
+
+  it("exposes luck state through render_game_to_text", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 2,
+        view: "shop",
+        p: { hp: 50, mhp: 50, atk: 5, def: 2, gold: 10, wlv: 1, alv: 1, pot: 2, luck: 1 },
+        inv: [{ id: "lucky-2", name: "Charm", value: 12, emoji: "C", rarity: "common", luck: 1 }],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    const payload = JSON.parse(window.render_game_to_text());
+
+    expect(payload.player.luck).toBe(1);
+    expect(payload.inventory.luckTotal).toBe(2);
+    expect(payload.inventory.luckyItemCount).toBe(1);
+    expect(payload.luckTier).toBe("fortunate");
   });
 });
