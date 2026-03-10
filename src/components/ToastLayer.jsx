@@ -1,20 +1,21 @@
 /**
  * Fixed toasts for achievement unlocks.
- * @param {{ toasts: Array<{ id: number, e: string, name: string }> }} props
+ * @param {{ toasts: Array<{ id: string, e: string, name: string }> }} props
  */
 export function ToastLayer({ toasts }) {
   if (toasts.length === 0) return null;
+
   return (
     <div
-      className="fixed top-4 left-1/2 z-50 flex flex-col gap-2 items-center"
+      className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 flex-col items-center gap-2"
       style={{ transform: "translateX(-50%)" }}
     >
-      {toasts.map((t) => (
+      {toasts.map((toast) => (
         <div
-          key={t.id}
-          className="bg-yellow-900 border border-yellow-600 text-yellow-200 px-4 py-2 rounded-lg shadow-lg text-sm font-bold animate-bounce"
+          key={toast.id}
+          className="animate-bounce rounded-lg border border-yellow-500/70 bg-emerald-950 px-4 py-2 text-sm font-bold text-yellow-100 shadow-lg"
         >
-          🏅 {t.e} {t.name} Unlocked!
+          {toast.e} {toast.name} Unlocked!
         </div>
       ))}
     </div>

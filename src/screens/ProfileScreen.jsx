@@ -31,10 +31,11 @@ export function ProfileScreen({
     ["Potions Used", lt.potions],
     ["Runs Started", lt.runs],
     ["Deepest Floor", lt.bestFloor],
+    ["Best Luck", lt.bestLuck],
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 p-3 text-white">
+    <div className="min-h-screen bg-slate-950 p-3 text-white">
       <ToastLayer toasts={toasts} />
       <ConfirmDialog
         open={confirmReset}
@@ -49,10 +50,13 @@ export function ProfileScreen({
       />
       <div className="mx-auto max-w-2xl space-y-3">
         <div className="flex items-center justify-between">
-          <h1 className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-lg font-bold text-transparent">
-            Loot &amp; Liability
-          </h1>
-          <Btn onClick={() => setView(prevView)} c="bg-gray-600 hover:bg-gray-500">
+          <div>
+            <h1 className="bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-lg font-bold text-transparent">
+              Loot &amp; Liability
+            </h1>
+            <p className="text-xs text-emerald-100/70">Broker&apos;s Ledger</p>
+          </div>
+          <Btn onClick={() => setView(prevView)} c="bg-slate-700 hover:bg-slate-600">
             Back
           </Btn>
         </div>
@@ -63,21 +67,21 @@ export function ProfileScreen({
               type="button"
               onClick={() => setProfTab(key)}
               className={`flex-1 rounded-t-lg py-2 text-sm font-bold transition-colors ${
-                profTab === key ? "bg-gray-800 text-white" : "bg-gray-900 text-gray-500 hover:text-gray-300"
+                profTab === key ? "bg-slate-800 text-white" : "bg-slate-900 text-slate-500 hover:text-slate-300"
               }`}
             >
               {label}
             </button>
           ))}
         </div>
-        <div className="min-h-96 rounded-b-lg rounded-tr-lg border border-gray-700 bg-gray-800 p-4">
+        <div className="min-h-96 rounded-b-lg rounded-tr-lg border border-emerald-400/20 bg-slate-900/85 p-4">
           {profTab === "stats" && (
             <div className="space-y-4">
-              <h2 className="text-base font-bold">Lifetime Statistics</h2>
+              <h2 className="text-base font-bold text-yellow-100">Lifetime Tally</h2>
               <div className="grid grid-cols-2 gap-3">
                 {statRows.map(([label, value]) => (
-                  <div key={label} className="rounded-lg bg-gray-700 p-3">
-                    <div className="text-xs text-gray-400">{label}</div>
+                  <div key={label} className="rounded-lg bg-slate-800 p-3">
+                    <div className="text-xs text-slate-400">{label}</div>
                     <div className="font-bold text-white">{value}</div>
                   </div>
                 ))}
@@ -86,12 +90,12 @@ export function ProfileScreen({
           )}
           {profTab === "ach" && (
             <div className="space-y-3">
-              <h2 className="text-base font-bold">
+              <h2 className="text-base font-bold text-yellow-100">
                 Achievements ({ach.length}/{ACHDEFS.length})
               </h2>
-              <div className="h-2 w-full rounded-full bg-gray-700">
+              <div className="h-2 w-full rounded-full bg-slate-700">
                 <div
-                  className="h-2 rounded-full bg-yellow-500 transition-all"
+                  className="h-2 rounded-full bg-emerald-500 transition-all"
                   style={{ width: `${(ach.length / ACHDEFS.length) * 100}%` }}
                 />
               </div>
@@ -102,17 +106,17 @@ export function ProfileScreen({
                     <div
                       key={achievement.id}
                       className={`flex items-center gap-3 rounded-lg p-3 ${
-                        hasAchievement ? "bg-gray-700" : "bg-gray-900 opacity-50"
+                        hasAchievement ? "bg-slate-800" : "bg-slate-950 opacity-50"
                       }`}
                     >
                       <span className="text-2xl">{hasAchievement ? achievement.e : "Locked"}</span>
                       <div>
-                        <p className={`text-sm font-bold ${hasAchievement ? "text-yellow-300" : "text-gray-400"}`}>
+                        <p className={`text-sm font-bold ${hasAchievement ? "text-yellow-200" : "text-slate-400"}`}>
                           {achievement.name}
                         </p>
-                        <p className="text-xs text-gray-400">{achievement.desc}</p>
+                        <p className="text-xs text-slate-400">{achievement.desc}</p>
                       </div>
-                      {hasAchievement && <span className="ml-auto text-xs font-bold text-green-400">Done</span>}
+                      {hasAchievement && <span className="ml-auto text-xs font-bold text-emerald-300">Done</span>}
                     </div>
                   );
                 })}
@@ -121,16 +125,16 @@ export function ProfileScreen({
           )}
           {profTab === "hs" && (
             <div className="space-y-3">
-              <h2 className="text-base font-bold">Hall of Fame (Top 5 Runs)</h2>
+              <h2 className="text-base font-bold text-yellow-100">Hall of Hauls (Top 5 Runs)</h2>
               {hs.length === 0 ? (
-                <p className="py-8 text-center text-sm text-gray-500">No runs recorded yet. Get out there and die gloriously!</p>
+                <p className="py-8 text-center text-sm text-slate-500">No entries yet. Fortune prefers a little history.</p>
               ) : (
                 <div className="space-y-2">
                   {hs.map((entry, index) => (
                     <div
                       key={`${entry.date}-${index}`}
                       className={`flex items-center gap-3 rounded-lg p-3 ${
-                        index === 0 ? "border border-yellow-700 bg-yellow-900" : "bg-gray-700"
+                        index === 0 ? "border border-yellow-700 bg-yellow-950/60" : "bg-slate-800"
                       }`}
                     >
                       <span className="w-8 text-center text-2xl font-bold">
@@ -138,12 +142,12 @@ export function ProfileScreen({
                       </span>
                       <div className="flex-1">
                         <div className="flex flex-wrap gap-x-4 text-sm">
-                          <span className="font-bold text-yellow-400">{entry.gold}g</span>
+                          <span className="font-bold text-amber-300">{entry.gold}g</span>
                           <span>{entry.slain} slain</span>
                           <span>Floor {entry.floor}</span>
                           <span>{entry.rooms} rooms</span>
                         </div>
-                        <p className="text-xs text-gray-500">{entry.date}</p>
+                        <p className="text-xs text-slate-500">{entry.date}</p>
                       </div>
                     </div>
                   ))}
@@ -155,7 +159,7 @@ export function ProfileScreen({
         <button
           type="button"
           onClick={() => setConfirmReset(true)}
-          className="mx-auto block text-xs text-gray-600 transition-colors hover:text-red-400"
+          className="mx-auto block text-xs text-slate-600 transition-colors hover:text-rose-300"
         >
           Delete All Data
         </button>

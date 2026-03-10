@@ -1,6 +1,8 @@
 import { makeId, pick } from "./Helpers.js";
 import { LOOT, MONSTERS } from "../data/Constants.js";
 
+const LUCK_UPGRADE_COSTS = [20, 35, 55, 80, 110, 145];
+
 /**
  * Roll a loot item based on floor, tier, and rooms explored.
  * @param {number} floor
@@ -22,6 +24,7 @@ export function rollLoot(floor, tier, rooms) {
     name: item.n,
     value: Math.round(item.v * mult),
     emoji: item.e,
+    luck: item.luck || 0,
     rarity,
     id: makeId("loot"),
   };
@@ -72,6 +75,41 @@ export function getDanger(floor, tier, rooms) {
  */
 export function upgCost(lvl) {
   return 30 * lvl * lvl;
+}
+
+/**
+ * Luck upgrade cost for the next point of run luck.
+ * @param {number} luck
+ * @returns {number}
+ */
+export function getLuckUpgradeCost(luck) {
+  if (luck < LUCK_UPGRADE_COSTS.length) return LUCK_UPGRADE_COSTS[luck];
+  const overflow = luck - (LUCK_UPGRADE_COSTS.length - 1);
+  return LUCK_UPGRADE_COSTS[LUCK_UPGRADE_COSTS.length - 1] + overflow * 40;
+}
+
+/**
+ * Total active luck from player base luck plus carried lucky cargo.
+ * @param {{ luck?: number }} player
+ * @param {{ luck?: number }[]} inventory
+ * @returns {number}
+ */
+export function getCurrentLuck(player, inventory) {
+  const baseLuck = Number.isFinite(player?.luck) ? player.luck : 0;
+  const carriedLuck = Array.isArray(inventory)
+    ? inventory.reduce((sum, item) => sum + (Number.isFinite(item?.luck) ? item.luck : 0), 0)
+    : 0;
+  return baseLuck + carriedLuck;
+}
+
+/**
+ * Count carried cargo items that grant luck.
+ * @param {{ luck?: number }[]} inventory
+ * @returns {number}
+ */
+export function getLuckyItemCount(inventory) {
+  if (!Array.isArray(inventory)) return 0;
+  return inventory.filter((item) => Number.isFinite(item?.luck) && item.luck > 0).length;
 }
 
 /**

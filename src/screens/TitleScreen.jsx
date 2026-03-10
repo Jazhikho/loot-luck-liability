@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GAME_BLURB, GAME_TAGLINE } from "../data/Constants.js";
 import { LS } from "../utils/Helpers.js";
 import { ToastLayer } from "../components/ToastLayer.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
@@ -20,30 +21,28 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 p-4 text-white">
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 text-white">
       <ToastLayer toasts={toasts} />
       <ConfirmDialog
         open={confirmNewGame}
-        title="Replace the current run?"
-        body="Starting a new game will overwrite the current in-progress run once the next autosave happens."
-        confirmLabel="Start New Run"
+        title="Abandon the current run?"
+        body="Starting a new run will replace the current in-progress expedition once the next autosave happens."
+        confirmLabel="Start Fresh Run"
         onConfirm={() => {
           setConfirmNewGame(false);
           newGame();
         }}
         onCancel={() => setConfirmNewGame(false)}
-        tone="bg-indigo-600 hover:bg-indigo-500"
+        tone="bg-emerald-600 hover:bg-emerald-500"
       />
-      <div className="max-w-md text-center">
-        <div className="mb-3 text-7xl">🏰</div>
-        <h1 className="mb-1 bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-4xl font-bold text-transparent">
+      <div className="max-w-lg rounded-2xl border border-emerald-400/20 bg-slate-900/80 p-8 text-center shadow-[0_0_60px_rgba(16,185,129,0.08)]">
+        <div className="mb-4 text-7xl">🍀</div>
+        <h1 className="mb-1 bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
           Loot &amp; Liability
         </h1>
-        <p className="mb-2 italic text-gray-400">&quot;Delve. Loot. Get Paid (Poorly).&quot;</p>
-        <p className="mb-6 text-sm leading-relaxed text-gray-500">
-          Work for a questionable merchant, raid dungeons, haul back artifacts. Push deeper for better loot, but know
-          when to retreat.
-        </p>
+        <p className="mb-2 text-sm uppercase tracking-[0.25em] text-emerald-200/70">St. Paddy&apos;s Jam Cut</p>
+        <p className="mb-2 italic text-yellow-100/80">{GAME_TAGLINE}</p>
+        <p className="mb-6 text-sm leading-relaxed text-slate-400">{GAME_BLURB}</p>
         <div className="space-y-2">
           {hasSave ? (
             <>
@@ -52,21 +51,21 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
                 onClick={continueGame}
                 className="w-full rounded-lg bg-emerald-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-emerald-500"
               >
-                Continue
+                Continue the Haul
               </button>
               <button
                 type="button"
                 onClick={onNewGame}
-                className="w-full rounded-lg bg-indigo-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-indigo-500"
+                className="w-full rounded-lg bg-cyan-700 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-cyan-600"
               >
-                New Game
+                Start a Fresh Misadventure
               </button>
             </>
           ) : (
             <button
               type="button"
               onClick={onNewGame}
-              className="w-full rounded-lg bg-indigo-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-indigo-500"
+              className="w-full rounded-lg bg-emerald-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-emerald-500"
             >
               Start Adventuring
             </button>
@@ -74,9 +73,9 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
           <button
             type="button"
             onClick={goProfile}
-            className="w-full rounded-lg bg-gray-700 px-8 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
+            className="w-full rounded-lg bg-slate-700 px-8 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-600"
           >
-            Stats &amp; Achievements
+            Open the Ledger
           </button>
         </div>
       </div>

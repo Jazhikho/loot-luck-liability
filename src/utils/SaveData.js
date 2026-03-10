@@ -2,7 +2,7 @@ import { DUNGEONS } from "../data/Constants.js";
 import { DEF_P, DEF_RS } from "../data/Defaults.js";
 import { makeId } from "./Helpers.js";
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 const RUN_VIEWS = new Set(["shop", "pick", "combat", "floorHub"]);
 const ITEM_RARITIES = new Set(["common", "uncommon", "rare", "legendary"]);
@@ -33,6 +33,7 @@ function sanitizePlayer(raw) {
     wlv: toFiniteInt(raw.wlv, DEF_P.wlv, 1),
     alv: toFiniteInt(raw.alv, DEF_P.alv, 1),
     pot: toFiniteInt(raw.pot, DEF_P.pot, 0),
+    luck: toFiniteInt(raw.luck, DEF_P.luck, 0),
   };
 }
 
@@ -46,6 +47,7 @@ function sanitizeInventory(raw) {
       value: toFiniteInt(item.value, 0, 0),
       emoji: typeof item.emoji === "string" ? item.emoji : "📦",
       rarity: item.rarity,
+      luck: toFiniteInt(item.luck, 0, 0),
     }));
 }
 
@@ -59,6 +61,8 @@ function sanitizeFoe(raw) {
   const maxHp = toFiniteInt(raw.maxHp, 1, 1);
   return {
     name: raw.name,
+    displayName: typeof raw.displayName === "string" ? raw.displayName : raw.name,
+    encounterTitle: typeof raw.encounterTitle === "string" ? raw.encounterTitle : "",
     emoji: typeof raw.emoji === "string" ? raw.emoji : "👹",
     hp: toFiniteInt(raw.hp, maxHp, 0, maxHp),
     maxHp,

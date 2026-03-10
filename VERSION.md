@@ -1,5 +1,12 @@
 # Version History
 
+## 1.1.0 - 2026-03-10
+
+- Rethemed the game for the St. Paddy's jam with new dungeon, monster, loot, and UI flavor.
+- Added a visible Luck stat, run-only Luck upgrades, lucky cargo bonuses, and `bestLuck` tracking.
+- Introduced a presentation-only luck narration layer so high-luck runs become increasingly absurd without changing combat or reward math.
+- Expanded automated coverage for luck upgrades, save normalization, render-state output, and presentation parity.
+
 ## 1.0.1 - 2026-03-10
 
 - Hardened save loading with schema validation and safer fallbacks.

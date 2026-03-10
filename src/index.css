@@ -5,6 +5,11 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(250, 204, 21, 0.12), transparent 25%),
+    linear-gradient(180deg, #020617 0%, #081021 45%, #03121a 100%);
+  color: #f8fafc;
 }
 
 #root {

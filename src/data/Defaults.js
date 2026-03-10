@@ -8,6 +8,7 @@ export const DEF_P = {
   wlv: 1,
   alv: 1,
   pot: 2,
+  luck: 0,
 };
 
 /** Default run stats (reset each run). */
@@ -30,24 +31,25 @@ export const DEF_LT = {
   potions: 0,
   runs: 0,
   bestFloor: 0,
+  bestLuck: 0,
 };
 
 /** Rarity text colors for items. */
 export const RC = {
-  common: "text-gray-300",
-  uncommon: "text-green-400",
-  rare: "text-blue-400",
+  common: "text-amber-100",
+  uncommon: "text-emerald-300",
+  rare: "text-cyan-300",
   legendary: "text-yellow-300",
 };
 
 /** Log message type colors. */
 export const LC = {
-  info: "text-blue-300",
-  ok: "text-green-300",
-  bad: "text-red-300",
+  info: "text-cyan-200",
+  ok: "text-emerald-300",
+  bad: "text-rose-300",
   warn: "text-yellow-300",
-  gold: "text-yellow-400",
-  hit: "text-orange-300",
-  normal: "text-gray-300",
-  dim: "text-gray-500",
+  gold: "text-amber-300",
+  hit: "text-lime-300",
+  normal: "text-slate-200",
+  dim: "text-slate-500",
 };
