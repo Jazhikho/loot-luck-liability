@@ -1,5 +1,9 @@
 # Version History
 
+## 1.2.1 - 2026-03-10
+
+- Updated the visible game title to `Loot, Luck & Liability` across the main UI.
+
 ## 1.2.0 - 2026-03-10
 
 - Added enemy banter and more comedic combat narration so encounters feel more like a taunting tavern disaster.

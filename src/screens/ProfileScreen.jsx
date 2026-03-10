@@ -52,7 +52,7 @@ export function ProfileScreen({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-lg font-bold text-transparent">
-              Loot &amp; Liability
+              Loot, Luck &amp; Liability
             </h1>
             <p className="text-xs text-emerald-100/70">Broker&apos;s Ledger</p>
           </div>

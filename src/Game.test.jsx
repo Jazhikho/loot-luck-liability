@@ -7,7 +7,7 @@ import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { TitleScreen } from "./screens/TitleScreen.jsx";
 import { getDungeonCatalog } from "./utils/DungeonCatalog.js";
 
-describe("Loot & Liability", () => {
+describe("Loot, Luck & Liability", () => {
   beforeEach(() => {
     localStorage.clear();
   });

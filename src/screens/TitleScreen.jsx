@@ -38,7 +38,7 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
       <div className="max-w-lg rounded-2xl border border-emerald-400/20 bg-slate-900/80 p-8 text-center shadow-[0_0_60px_rgba(16,185,129,0.08)]">
         <div className="mb-4 text-7xl">🍀</div>
         <h1 className="mb-1 bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
-          Loot &amp; Liability
+          Loot, Luck &amp; Liability
         </h1>
         <p className="mb-2 text-sm uppercase tracking-[0.25em] text-emerald-200/70">St. Paddy&apos;s Jam Cut</p>
         <p className="mb-2 italic text-yellow-100/80">{GAME_TAGLINE}</p>
