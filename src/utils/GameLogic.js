@@ -1,4 +1,4 @@
-import { pick } from "./Helpers.js";
+import { makeId, pick } from "./Helpers.js";
 import { LOOT, MONSTERS } from "../data/Constants.js";
 
 /**
@@ -23,7 +23,7 @@ export function rollLoot(floor, tier, rooms) {
     value: Math.round(item.v * mult),
     emoji: item.e,
     rarity,
-    id: Date.now() + Math.random(),
+    id: makeId("loot"),
   };
 }
 
@@ -72,4 +72,23 @@ export function getDanger(floor, tier, rooms) {
  */
 export function upgCost(lvl) {
   return 30 * lvl * lvl;
+}
+
+/**
+ * Whether the player can spend a potion for a non-zero heal.
+ * @param {{ hp: number, mhp: number, pot: number }} player
+ * @returns {boolean}
+ */
+export function canUsePotion(player) {
+  return Boolean(player && player.pot > 0 && player.hp < player.mhp);
+}
+
+/**
+ * Whether a retreat should count as a completed dungeon clear.
+ * @param {number} floor
+ * @param {{ floors: number } | null} dungeon
+ * @returns {boolean}
+ */
+export function didReturnFromClearedDungeon(floor, dungeon) {
+  return Boolean(dungeon && floor >= dungeon.floors);
 }

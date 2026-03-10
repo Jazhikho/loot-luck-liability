@@ -1,57 +1,82 @@
+import { useState } from "react";
 import { LS } from "../utils/Helpers.js";
 import { ToastLayer } from "../components/ToastLayer.jsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 
 /**
  * Title screen: continue, new game, or open profile.
- * @param {{ toasts: Array, setView: (v: string) => void, newGame: () => void, goProfile: () => void }} props
+ * @param {{ toasts: Array, continueGame: () => void, newGame: () => void, goProfile: () => void }} props
  */
-export function TitleScreen({ toasts, setView, newGame, goProfile }) {
+export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
   const hasSave = LS.get("ll_save", null);
-  const onContinue = () => {
-    const s = LS.get("ll_save", null);
-    if (s) setView(s.view || "shop");
+  const [confirmNewGame, setConfirmNewGame] = useState(false);
+
+  const onNewGame = () => {
+    if (!hasSave) {
+      newGame();
+      return;
+    }
+    setConfirmNewGame(true);
   };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-900 p-4 text-white">
       <ToastLayer toasts={toasts} />
-      <div className="text-center max-w-md">
-        <div className="text-7xl mb-3">🏰</div>
-        <h1 className="text-4xl font-bold mb-1 bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
+      <ConfirmDialog
+        open={confirmNewGame}
+        title="Replace the current run?"
+        body="Starting a new game will overwrite the current in-progress run once the next autosave happens."
+        confirmLabel="Start New Run"
+        onConfirm={() => {
+          setConfirmNewGame(false);
+          newGame();
+        }}
+        onCancel={() => setConfirmNewGame(false)}
+        tone="bg-indigo-600 hover:bg-indigo-500"
+      />
+      <div className="max-w-md text-center">
+        <div className="mb-3 text-7xl">🏰</div>
+        <h1 className="mb-1 bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-4xl font-bold text-transparent">
           Loot &amp; Liability
         </h1>
-        <p className="text-gray-400 mb-2 italic">&quot;Delve. Loot. Get Paid (Poorly).&quot;</p>
-        <p className="text-gray-500 mb-6 text-sm leading-relaxed">
-          Work for a questionable merchant, raid dungeons, haul back artifacts. Push deeper for better loot, but know when to retreat.
+        <p className="mb-2 italic text-gray-400">&quot;Delve. Loot. Get Paid (Poorly).&quot;</p>
+        <p className="mb-6 text-sm leading-relaxed text-gray-500">
+          Work for a questionable merchant, raid dungeons, haul back artifacts. Push deeper for better loot, but know
+          when to retreat.
         </p>
         <div className="space-y-2">
           {hasSave ? (
             <>
               <button
-                onClick={onContinue}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors cursor-pointer w-full"
+                type="button"
+                onClick={continueGame}
+                className="w-full rounded-lg bg-emerald-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-emerald-500"
               >
-                ▶️ Continue
+                Continue
               </button>
               <button
-                onClick={newGame}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors cursor-pointer w-full"
+                type="button"
+                onClick={onNewGame}
+                className="w-full rounded-lg bg-indigo-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-indigo-500"
               >
-                🆕 New Game
+                New Game
               </button>
             </>
           ) : (
             <button
-              onClick={newGame}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors cursor-pointer w-full"
+              type="button"
+              onClick={onNewGame}
+              className="w-full rounded-lg bg-indigo-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-indigo-500"
             >
               Start Adventuring
             </button>
           )}
           <button
+            type="button"
             onClick={goProfile}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-8 py-2 rounded-lg font-semibold text-sm transition-colors cursor-pointer w-full"
+            className="w-full rounded-lg bg-gray-700 px-8 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
           >
-            📊 Stats &amp; Achievements
+            Stats &amp; Achievements
           </button>
         </div>
       </div>

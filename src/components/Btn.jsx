@@ -8,6 +8,7 @@ export function Btn({ onClick, children, disabled, c = "bg-indigo-600 hover:bg-i
   const widthClass = full ? "w-full" : "";
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className={`${disabledClass} ${base} ${widthClass}`}

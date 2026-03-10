@@ -17,6 +17,16 @@ export function rand(a, b) {
   return Math.floor(Math.random() * (b - a + 1)) + a;
 }
 
+/**
+ * Lightweight unique id helper for UI keys and temporary records.
+ * @param {string} prefix
+ * @returns {string}
+ */
+export function makeId(prefix = "id") {
+  if (globalThis.crypto?.randomUUID) return `${prefix}-${globalThis.crypto.randomUUID()}`;
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1_000_000_000)}`;
+}
+
 /** LocalStorage wrapper with JSON and safe defaults. */
 export const LS = {
   /**
