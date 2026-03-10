@@ -93,7 +93,7 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText("Jazhikho")).toBeInTheDocument();
     expect(screen.getByText(/Claude Sonnet/i)).toBeInTheDocument();
     expect(screen.getByText(/Codex \(GPT 5\.4\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/v1\.3\.1/i)).toBeInTheDocument();
+    expect(screen.getByText(/v1\.4\.0/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Back to Title" }));
     expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();
@@ -124,6 +124,24 @@ describe("Loot, Luck & Liability", () => {
     expect(nukeData).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps the achievements view in an internal scroll panel", () => {
+    render(
+      <ProfileScreen
+        toasts={[]}
+        prevView="shop"
+        setView={vi.fn()}
+        profTab="ach"
+        setProfTab={vi.fn()}
+        lt={{ gold: 0, slain: 0, deaths: 0, clears: 0, rooms: 0, items: 0, potions: 0, runs: 0, bestFloor: 0, bestLuck: 0 }}
+        ach={[]}
+        hs={[]}
+        nukeData={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId("achievements-panel").className).toMatch(/overflow-y-auto/);
+  });
+
   it("disables potion use in combat at full health", () => {
     render(
       <CombatView
@@ -136,6 +154,20 @@ describe("Loot, Luck & Liability", () => {
     );
 
     expect(screen.getByRole("button", { name: /Tonic \(2\)/i })).toBeDisabled();
+  });
+
+  it("warns when combat is one bad hit from lethal", () => {
+    render(
+      <CombatView
+        foe={{ name: "Coin Wraith", emoji: "W", hp: 10, maxHp: 10, atk: 6, def: 1 }}
+        p={{ hp: 6, mhp: 20, def: 2, pot: 1 }}
+        doAttack={vi.fn()}
+        usePot={vi.fn()}
+        doFlee={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/one bad hit or failed bolt ends this run/i)).toBeInTheDocument();
   });
 
   it("buys run luck upgrades at the fixed cost and updates the display", async () => {
@@ -168,6 +200,44 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText("Gold 40g")).toBeInTheDocument();
     expect(screen.getByText("Luck 1/1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Luck +1 (35g)" })).toBeInTheDocument();
+  });
+
+  it("keeps locked cargo out of bulk cash-ins", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 3,
+        view: "shop",
+        p: { hp: 50, mhp: 50, atk: 5, def: 2, gold: 10, wlv: 1, alv: 1, pot: 2, luck: 0 },
+        inv: [
+          { id: "hold-1", name: "Lucky Ledger", value: 50, emoji: "L", rarity: "rare", luck: 2, locked: false },
+          { id: "hold-2", name: "Pub Token", value: 10, emoji: "P", rarity: "common", luck: 0, locked: false },
+        ],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    const luckyRow = screen.getByText(/Lucky Ledger/).closest("div");
+    await user.click(within(luckyRow).getByRole("button", { name: "Hold" }));
+    expect(within(luckyRow).getByRole("button", { name: "Held" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cash In (10g)" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cash In (10g)" }));
+
+    expect(screen.getByText("Gold 20g")).toBeInTheDocument();
+    expect(screen.getByText("Cargo 1")).toBeInTheDocument();
+    expect(screen.getByText(/Lucky Ledger/)).toBeInTheDocument();
   });
 
   it("removes carried luck immediately when lucky cargo is sold", async () => {

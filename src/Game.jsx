@@ -20,10 +20,15 @@ import { DEF_LT, DEF_P, DEF_RS } from "./data/Defaults.js";
 import {
   canUsePotion,
   didReturnFromClearedDungeon,
+  getArmorUpgradeBenefit,
   getCurrentLuck,
   getDanger,
+  getLockedItemCount,
   getLuckyItemCount,
   getLuckUpgradeCost,
+  getSellableItems,
+  getSellableTotal,
+  getWeaponUpgradeBenefit,
   rollLoot,
   spawnMonster,
   upgCost,
@@ -71,17 +76,31 @@ export default function Game() {
   const [toasts, setToasts] = useState([]);
   const [profTab, setProfTab] = useState("stats");
   const [prevView, setPrevView] = useState("title");
+  const [pendingDeath, setPendingDeath] = useState(null);
 
   const logRef = useRef(null);
   const loaded = useRef(false);
   const ltRef = useRef(DEF_LT);
   const achRef = useRef([]);
   const rsRef = useRef(DEF_RS);
+  const deathTimerRef = useRef(null);
 
   const currentLuck = getCurrentLuck(p, inv);
   const luckyItemCount = getLuckyItemCount(inv);
+  const lockedItemCount = getLockedItemCount(inv);
+  const sellableTotal = getSellableTotal(inv);
   const luckTier = getLuckTier(currentLuck);
   const dungeonCatalog = getDungeonCatalog(unlocked);
+  const weaponBonus = getWeaponUpgradeBenefit();
+  const armorBonus = getArmorUpgradeBenefit();
+
+  const clearPendingDeath = useCallback(() => {
+    if (deathTimerRef.current) {
+      clearTimeout(deathTimerRef.current);
+      deathTimerRef.current = null;
+    }
+    setPendingDeath(null);
+  }, []);
 
   const alog = useCallback((msg, type = "normal") => {
     setLog((current) => [...current.slice(-80), { msg, type, id: makeId("log") }]);
@@ -157,8 +176,9 @@ export default function Game() {
   const continueGame = useCallback(() => {
     const save = normalizeSave(LS.get("ll_save", null));
     if (!save) return;
+    clearPendingDeath();
     loadSaveIntoState(save);
-  }, [loadSaveIntoState]);
+  }, [clearPendingDeath, loadSaveIntoState]);
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -213,6 +233,8 @@ export default function Game() {
     if (currentLuck > ltRef.current.bestLuck) updLt({ bestLuck: currentLuck });
   }, [currentLuck, updLt]);
 
+  useEffect(() => () => clearPendingDeath(), [clearPendingDeath]);
+
   useEffect(() => {
     window.render_game_to_text = () =>
       JSON.stringify({
@@ -232,6 +254,7 @@ export default function Game() {
           totalValue: inv.reduce((sum, item) => sum + item.value, 0),
           luckTotal: currentLuck,
           luckyItemCount,
+          lockedCount: lockedItemCount,
         },
         luckTier: luckTier.key,
         dungeon: dng
@@ -262,7 +285,7 @@ export default function Game() {
       delete window.render_game_to_text;
       delete window.advanceTime;
     };
-  }, [view, p, inv, dng, fl, rooms, foe, rs, currentLuck, luckyItemCount, luckTier]);
+  }, [view, p, inv, dng, fl, rooms, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier]);
 
   const recordHs = useCallback(() => {
     const entry = {
@@ -289,14 +312,28 @@ export default function Game() {
   }, [tryUnlock, updLt, updRs]);
 
   const doDeath = useCallback(() => {
+    clearPendingDeath();
     recordHs();
     const nextDeaths = ltRef.current.deaths + 1;
     updLt({ deaths: nextDeaths });
     if (nextDeaths >= 5) tryUnlock("persistent");
     setView("dead");
-  }, [recordHs, tryUnlock, updLt]);
+  }, [clearPendingDeath, recordHs, tryUnlock, updLt]);
+
+  const queueDeath = useCallback(
+    (message) => {
+      clearPendingDeath();
+      setPendingDeath({ message });
+      deathTimerRef.current = setTimeout(() => {
+        deathTimerRef.current = null;
+        doDeath();
+      }, 900);
+    },
+    [clearPendingDeath, doDeath]
+  );
 
   const goShop = useCallback(() => {
+    clearPendingDeath();
     setView("shop");
     setMQuote(pick(GREETINGS));
     setDng(null);
@@ -304,7 +341,7 @@ export default function Game() {
     setRooms(0);
     setFoe(null);
     setAfterFight(null);
-  }, []);
+  }, [clearPendingDeath]);
 
   const goProfile = useCallback(() => {
     setPrevView(view);
@@ -313,6 +350,7 @@ export default function Game() {
   }, [view]);
 
   const resetRun = useCallback(() => {
+    clearPendingDeath();
     setP({ ...DEF_P });
     setInv([]);
     setDng(null);
@@ -325,19 +363,24 @@ export default function Game() {
     setMQuote("");
     setRs({ ...DEF_RS });
     rsRef.current = { ...DEF_RS };
-  }, []);
+  }, [clearPendingDeath]);
 
   const sellAll = () => {
-    if (inv.length === 0) return;
-    const total = inv.reduce((sum, item) => sum + item.value, 0);
+    const sellableItems = getSellableItems(inv);
+    if (sellableItems.length === 0) return;
+    const total = sellableItems.reduce((sum, item) => sum + item.value, 0);
     const newGold = p.gold + total;
     const newLifetimeGold = ltRef.current.gold + total;
+    const heldCount = inv.length - sellableItems.length;
 
     setP((prev) => ({ ...prev, gold: newGold }));
-    setInv([]);
+    setInv((current) => current.filter((item) => item.locked));
     updRs({ earned: rsRef.current.earned + total });
     updLt({ gold: newLifetimeGold });
-    alog(`You cash in ${inv.length} curios for ${total} gold. ${pick(SELL_QUOTES)}`, "gold");
+    alog(
+      `You cash in ${sellableItems.length} curios for ${total} gold.${heldCount > 0 ? ` ${heldCount} held item${heldCount === 1 ? "" : "s"} stay tucked away.` : ""} ${pick(SELL_QUOTES)}`,
+      "gold"
+    );
 
     if (newGold >= 500) tryUnlock("deep_pockets");
     if (newLifetimeGold >= 1000) tryUnlock("big_earner");
@@ -362,6 +405,12 @@ export default function Game() {
     if (newLifetimeGold >= 5000) tryUnlock("tycoon");
   };
 
+  const toggleLockItem = (id) => {
+    setInv((current) =>
+      current.map((item) => (item.id === id ? { ...item, locked: !item.locked } : item))
+    );
+  };
+
   const upgWeapon = () => {
     const cost = upgCost(p.wlv);
     if (p.gold < cost) {
@@ -370,8 +419,8 @@ export default function Game() {
     }
 
     const nextLevel = p.wlv + 1;
-    setP((prev) => ({ ...prev, gold: prev.gold - cost, wlv: nextLevel, atk: prev.atk + 3 }));
-    alog(`Your weapon is blessed up to level ${nextLevel}. Attack +3.`, "ok");
+    setP((prev) => ({ ...prev, gold: prev.gold - cost, wlv: nextLevel, atk: prev.atk + weaponBonus.atk }));
+    alog(`Your weapon is blessed up to level ${nextLevel}. Attack +${weaponBonus.atk}.`, "ok");
     if (nextLevel >= 5) tryUnlock("upgraded");
   };
 
@@ -387,11 +436,11 @@ export default function Game() {
       ...prev,
       gold: prev.gold - cost,
       alv: nextLevel,
-      def: prev.def + 2,
-      mhp: prev.mhp + 5,
-      hp: Math.min(prev.hp + 5, prev.mhp + 5),
+      def: prev.def + armorBonus.def,
+      mhp: prev.mhp + armorBonus.hp,
+      hp: Math.min(prev.hp + armorBonus.hp, prev.mhp + armorBonus.hp),
     }));
-    alog(`Your armor is lined with lucky iron. Defense +2, Max HP +5.`, "ok");
+    alog(`Your armor is lined with lucky iron. Defense +${armorBonus.def}, Max HP +${armorBonus.hp}.`, "ok");
     if (nextLevel >= 5) tryUnlock("upgraded");
   };
 
@@ -578,17 +627,15 @@ export default function Game() {
 
     if (roll < monsterChance + lootChance + trapChance) {
       const damage = rand(3 + fl, 6 + dng.tier * 2 + fl + Math.floor(nextRooms / 2));
-      setP((prev) => {
-        const nextHp = Math.max(0, prev.hp - damage);
-        const trap = decorateTrapOutcome({ damage, fatal: nextHp <= 0 }, currentLuck);
-        alog(trap.message, "bad");
-        if (nextHp <= 0) {
-          const death = decorateDeathOutcome({ cause: "trap" }, currentLuck);
-          alog(death.message, "bad");
-          setTimeout(() => doDeath(), 50);
-        }
-        return { ...prev, hp: nextHp };
-      });
+      const nextHp = Math.max(0, p.hp - damage);
+      const trap = decorateTrapOutcome({ damage, fatal: nextHp <= 0 }, currentLuck);
+      setP((prev) => ({ ...prev, hp: nextHp }));
+      alog(trap.message, "bad");
+      if (nextHp <= 0) {
+        const death = decorateDeathOutcome({ cause: "trap" }, currentLuck);
+        alog(death.message, "bad");
+        queueDeath("Luck buckles. The room goes cold around you.");
+      }
       return;
     }
 
@@ -654,7 +701,7 @@ export default function Game() {
 
     const enemyDamage = Math.max(1, foe.atk - p.def + rand(-1, 2));
     const nextPlayerHp = p.hp - enemyDamage;
-    const enemyAttack = decorateEnemyAttackOutcome(
+      const enemyAttack = decorateEnemyAttackOutcome(
       { attackerName: foe.displayName || foe.name, damage: enemyDamage },
       currentLuck
     );
@@ -664,7 +711,7 @@ export default function Game() {
       setP((prev) => ({ ...prev, hp: 0 }));
       const death = decorateDeathOutcome({ cause: "combat", foeName: foe.displayName || foe.name }, currentLuck);
       alog(death.message, "bad");
-      doDeath();
+      queueDeath("Luck blinks. You're about to be carried out of this mess.");
       return;
     }
 
@@ -718,7 +765,7 @@ export default function Game() {
       setP((prev) => ({ ...prev, hp: 0 }));
       const death = decorateDeathOutcome({ cause: "flee", foeName: foe.displayName || foe.name }, currentLuck);
       alog(death.message, "bad");
-      doDeath();
+      queueDeath("The escape goes sideways. This is where the run folds.");
       return;
     }
 
@@ -801,9 +848,9 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950/95 p-3 text-white">
+    <div className="h-screen overflow-hidden bg-slate-950/95 p-3 text-white">
       <ToastLayer toasts={toasts} />
-      <div className="mx-auto max-w-2xl space-y-3">
+      <div className="mx-auto flex h-[calc(100vh-1.5rem)] max-w-2xl min-h-0 flex-col gap-3">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="bg-gradient-to-r from-emerald-300 via-yellow-200 to-amber-300 bg-clip-text text-lg font-bold text-transparent">
@@ -826,7 +873,7 @@ export default function Game() {
           </div>
         </div>
         <StatsBar p={p} invLength={inv.length} currentLuck={currentLuck} />
-        <div className="min-h-72 rounded-xl border border-emerald-400/20 bg-slate-900/90 p-4 shadow-[0_0_40px_rgba(16,185,129,0.08)]">
+        <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-emerald-400/20 bg-slate-900/90 p-4 shadow-[0_0_40px_rgba(16,185,129,0.08)]">
           {activeView === "shop" && (
             <ShopView
               p={p}
@@ -834,6 +881,7 @@ export default function Game() {
               mQuote={mQuote}
               sellAll={sellAll}
               sellOne={sellOne}
+              toggleLock={toggleLockItem}
               upgWeapon={upgWeapon}
               upgArmor={upgArmor}
               upgLuck={upgLuck}
@@ -844,19 +892,25 @@ export default function Game() {
               luckCost={getLuckUpgradeCost(p.luck)}
               currentLuck={currentLuck}
               luckyItemCount={luckyItemCount}
+              sellableTotal={sellableTotal}
+              lockedCount={lockedItemCount}
+              weaponBonus={weaponBonus}
+              armorBonus={armorBonus}
             />
           )}
           {activeView === "pick" && (
-            <PickDungeonView
-              dungeons={dungeonCatalog}
-              unlocked={unlocked}
-              goShop={goShop}
-              startJourney={startJourney}
-              unlockDungeon={unlockDungeon}
-            />
+            <div className="h-full overflow-y-auto pr-1">
+              <PickDungeonView
+                dungeons={dungeonCatalog}
+                unlocked={unlocked}
+                goShop={goShop}
+                startJourney={startJourney}
+                unlockDungeon={unlockDungeon}
+              />
+            </div>
           )}
           {activeView === "combat" && (
-            <CombatView foe={foe} p={p} doAttack={doAttack} usePot={usePot} doFlee={doFlee} />
+            <CombatView foe={foe} p={p} doAttack={doAttack} usePot={usePot} doFlee={doFlee} pendingDeath={pendingDeath} />
           )}
           {activeView === "floorHub" && (
             <FloorHubView
@@ -871,6 +925,7 @@ export default function Game() {
               exploreRoom={exploreRoom}
               startRetreat={startRetreat}
               usePot={usePot}
+              pendingDeath={pendingDeath}
             />
           )}
         </div>

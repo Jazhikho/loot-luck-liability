@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { getCurrentLuck, getLuckyItemCount, getLuckUpgradeCost } from "./GameLogic.js";
+import {
+  getArmorUpgradeBenefit,
+  getCombatWarning,
+  getCurrentLuck,
+  getLockedItemCount,
+  getLuckyItemCount,
+  getLuckUpgradeCost,
+  getSellableTotal,
+  getWeaponUpgradeBenefit,
+} from "./GameLogic.js";
 
 describe("GameLogic luck helpers", () => {
   it("uses the fixed luck upgrade cost curve", () => {
@@ -18,5 +27,22 @@ describe("GameLogic luck helpers", () => {
       )
     ).toBe(6);
     expect(getLuckyItemCount([{ luck: 1 }, { luck: 0 }, {}, { luck: 2 }])).toBe(2);
+  });
+
+  it("tracks locked cargo separately from bulk sale totals", () => {
+    const inventory = [
+      { value: 10, locked: false },
+      { value: 20, locked: true },
+      { value: 15 },
+    ];
+
+    expect(getLockedItemCount(inventory)).toBe(1);
+    expect(getSellableTotal(inventory)).toBe(25);
+  });
+
+  it("returns the stronger upgrade bundles and lethal combat warnings", () => {
+    expect(getWeaponUpgradeBenefit()).toEqual({ atk: 4 });
+    expect(getArmorUpgradeBenefit()).toEqual({ def: 3, hp: 6 });
+    expect(getCombatWarning({ hp: 6, mhp: 50, def: 2 }, { atk: 6 })).toMatch(/ends this run/i);
   });
 });

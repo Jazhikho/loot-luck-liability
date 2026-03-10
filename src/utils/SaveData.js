@@ -2,7 +2,7 @@ import { DEF_P, DEF_RS } from "../data/Defaults.js";
 import { makeId } from "./Helpers.js";
 import { getDungeonCatalog, isKnownDungeonId } from "./DungeonCatalog.js";
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 const RUN_VIEWS = new Set(["shop", "pick", "combat", "floorHub"]);
 const ITEM_RARITIES = new Set(["common", "uncommon", "rare", "legendary"]);
@@ -48,6 +48,7 @@ function sanitizeInventory(raw) {
       emoji: typeof item.emoji === "string" ? item.emoji : "📦",
       rarity: item.rarity,
       luck: toFiniteInt(item.luck, 0, 0),
+      locked: Boolean(item.locked),
     }));
 }
 

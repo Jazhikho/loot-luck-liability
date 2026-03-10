@@ -1,5 +1,13 @@
 # Version History
 
+## 1.4.0 - 2026-03-10
+
+- Reworked the play and ledger layouts to scroll internally so achievements, cargo, and the adventure log stay visible inside tighter windows.
+- Promoted the flavor log into a labeled `Rumors & Wreckage` panel so the fourth-wall jokes and event text are harder to miss.
+- Added cargo locking so `Cash In` only sells unlocked items, with held cargo persisting through saves.
+- Made weapon and armor upgrades feel punchier with stronger per-level bonuses and clearer upgrade previews in the snug.
+- Added floor-tradeoff guidance plus combat danger/death warnings so lethal moments read before the dead screen cuts in.
+
 ## 1.3.1 - 2026-03-10
 
 - Fixed the release pipeline on Windows so Android signing arguments survive special characters in keystore passwords.

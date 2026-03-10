@@ -35,7 +35,7 @@ export function ProfileScreen({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 p-3 text-white">
+    <div className="h-screen overflow-hidden bg-slate-950 p-3 text-white">
       <ToastLayer toasts={toasts} />
       <ConfirmDialog
         open={confirmReset}
@@ -48,7 +48,7 @@ export function ProfileScreen({
         }}
         onCancel={() => setConfirmReset(false)}
       />
-      <div className="mx-auto max-w-2xl space-y-3">
+      <div className="mx-auto flex h-full max-w-2xl min-h-0 flex-col gap-3">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-lg font-bold text-transparent">
@@ -74,9 +74,10 @@ export function ProfileScreen({
             </button>
           ))}
         </div>
-        <div className="min-h-96 rounded-b-lg rounded-tr-lg border border-emerald-400/20 bg-slate-900/85 p-4">
+        <div className="min-h-0 flex-1 overflow-hidden rounded-b-lg rounded-tr-lg border border-emerald-400/20 bg-slate-900/85 p-4">
           {profTab === "stats" && (
-            <div className="space-y-4">
+            <div className="h-full overflow-y-auto pr-1">
+              <div className="space-y-4">
               <h2 className="text-base font-bold text-yellow-100">Lifetime Tally</h2>
               <div className="grid grid-cols-2 gap-3">
                 {statRows.map(([label, value]) => (
@@ -86,10 +87,12 @@ export function ProfileScreen({
                   </div>
                 ))}
               </div>
+              </div>
             </div>
           )}
           {profTab === "ach" && (
-            <div className="space-y-3">
+            <div className="h-full overflow-y-auto pr-1" data-testid="achievements-panel">
+              <div className="space-y-3">
               <h2 className="text-base font-bold text-yellow-100">
                 Achievements ({ach.length}/{ACHDEFS.length})
               </h2>
@@ -121,10 +124,12 @@ export function ProfileScreen({
                   );
                 })}
               </div>
+              </div>
             </div>
           )}
           {profTab === "hs" && (
-            <div className="space-y-3">
+            <div className="h-full overflow-y-auto pr-1">
+              <div className="space-y-3">
               <h2 className="text-base font-bold text-yellow-100">Hall of Hauls (Top 5 Runs)</h2>
               {hs.length === 0 ? (
                 <p className="py-8 text-center text-sm text-slate-500">No entries yet. Fortune prefers a little history.</p>
@@ -153,6 +158,7 @@ export function ProfileScreen({
                   ))}
                 </div>
               )}
+              </div>
             </div>
           )}
         </div>

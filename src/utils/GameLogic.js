@@ -2,6 +2,9 @@ import { makeId, pick } from "./Helpers.js";
 import { LOOT, MONSTERS } from "../data/Constants.js";
 
 const LUCK_UPGRADE_COSTS = [20, 35, 55, 80, 110, 145];
+const WEAPON_ATK_BONUS = 4;
+const ARMOR_DEF_BONUS = 3;
+const ARMOR_HP_BONUS = 6;
 
 /**
  * Roll a loot item based on floor, tier, and rooms explored.
@@ -89,6 +92,22 @@ export function getLuckUpgradeCost(luck) {
 }
 
 /**
+ * Weapon upgrade gains for the next purchase.
+ * @returns {{ atk: number }}
+ */
+export function getWeaponUpgradeBenefit() {
+  return { atk: WEAPON_ATK_BONUS };
+}
+
+/**
+ * Armor upgrade gains for the next purchase.
+ * @returns {{ def: number, hp: number }}
+ */
+export function getArmorUpgradeBenefit() {
+  return { def: ARMOR_DEF_BONUS, hp: ARMOR_HP_BONUS };
+}
+
+/**
  * Total active luck from player base luck plus carried lucky cargo.
  * @param {{ luck?: number }} player
  * @param {{ luck?: number }[]} inventory
@@ -113,12 +132,66 @@ export function getLuckyItemCount(inventory) {
 }
 
 /**
+ * Count cargo items marked to stay out of bulk sales.
+ * @param {{ locked?: boolean }[]} inventory
+ * @returns {number}
+ */
+export function getLockedItemCount(inventory) {
+  if (!Array.isArray(inventory)) return 0;
+  return inventory.filter((item) => item?.locked === true).length;
+}
+
+/**
+ * Get all cargo items eligible for a bulk cash-in.
+ * @param {{ locked?: boolean }[]} inventory
+ * @returns {Array}
+ */
+export function getSellableItems(inventory) {
+  if (!Array.isArray(inventory)) return [];
+  return inventory.filter((item) => item?.locked !== true);
+}
+
+/**
+ * Sum the value of all cargo items eligible for a bulk cash-in.
+ * @param {{ value?: number, locked?: boolean }[]} inventory
+ * @returns {number}
+ */
+export function getSellableTotal(inventory) {
+  return getSellableItems(inventory).reduce((sum, item) => sum + (Number.isFinite(item?.value) ? item.value : 0), 0);
+}
+
+/**
  * Whether the player can spend a potion for a non-zero heal.
  * @param {{ hp: number, mhp: number, pot: number }} player
  * @returns {boolean}
  */
 export function canUsePotion(player) {
   return Boolean(player && player.pot > 0 && player.hp < player.mhp);
+}
+
+/**
+ * Highest possible damage the active foe can deal this turn.
+ * @param {{ atk: number } | null} foe
+ * @param {{ def: number } | null} player
+ * @returns {number}
+ */
+export function getMaxIncomingDamage(foe, player) {
+  if (!foe || !player) return 0;
+  return Math.max(1, foe.atk - player.def + 2);
+}
+
+/**
+ * A short warning when the player is deep in kill range.
+ * @param {{ hp: number, mhp: number, def: number }} player
+ * @param {{ atk: number } | null} foe
+ * @returns {string}
+ */
+export function getCombatWarning(player, foe) {
+  if (!player || !foe) return "";
+  const maxHit = getMaxIncomingDamage(foe, player);
+  if (player.hp <= maxHit) return "One bad hit or failed bolt ends this run.";
+  if (player.hp <= Math.max(Math.ceil(player.mhp * 0.25), maxHit * 2)) return "You're in the red. The next bad roll could get ugly.";
+  return "";
 }
 
 /**

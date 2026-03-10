@@ -18,20 +18,27 @@ export function FloorHubView({
   exploreRoom,
   startRetreat,
   usePot,
+  pendingDeath = null,
 }) {
   const invTotal = inv.reduce((sum, item) => sum + item.value, 0);
+  const floorTradeoff =
+    fl >= dng.floors
+      ? "This is the bottom. The payouts are best here, and so are the ways to die."
+      : "Staying high is safer. Going deeper pays better and hits harder.";
   let hint = "The corridors fork ahead, all damp stone and clover rot.";
   if (rooms === 0) hint = "You arrive to stale air, wet stone, and the promise of somebody else's fortune.";
   else if (p.hp < p.mhp * 0.3) hint = "You're one bad omen from disaster. Even lucky fools know when to worry.";
   else if (rooms >= 5) hint = "The deeper you go, the more the dungeon feels like it knows your name.";
 
   return (
-    <div className="space-y-4">
+    <div className="h-full overflow-y-auto pr-1">
+      <div className="space-y-4">
       <div className="text-center">
         <h2 className="text-lg font-bold text-yellow-100">
           {dng.e} Floor {fl}/{dng.floors}
         </h2>
         <p className="text-xs text-slate-400">Rooms searched: {rooms}</p>
+        <p className="mt-1 text-xs text-amber-200/80">{floorTradeoff}</p>
       </div>
       <div className="flex flex-col items-center gap-2">
         <DangerMeter floor={fl} tier={dng.tier} roomCount={rooms} />
@@ -43,20 +50,25 @@ export function FloorHubView({
         </p>
       </div>
       <p className="text-center text-xs italic text-slate-400">{hint}</p>
+      {pendingDeath && (
+        <div className="mx-auto max-w-sm rounded-lg border border-rose-400/50 bg-rose-950/70 px-3 py-2 text-center text-xs font-bold text-rose-100">
+          {pendingDeath.message}
+        </div>
+      )}
       <div className="mx-auto max-w-xs space-y-2">
-        <Btn onClick={exploreRoom} full c="bg-emerald-700 hover:bg-emerald-600">
+        <Btn onClick={exploreRoom} disabled={Boolean(pendingDeath)} full c="bg-emerald-700 hover:bg-emerald-600">
           Explore a Room
         </Btn>
         {fl < dng.floors && (
-          <Btn onClick={() => enterFloor(fl + 1, dng)} full c="bg-cyan-700 hover:bg-cyan-600">
+          <Btn onClick={() => enterFloor(fl + 1, dng)} disabled={Boolean(pendingDeath)} full c="bg-cyan-700 hover:bg-cyan-600">
             Descend to Floor {fl + 1}
           </Btn>
         )}
-        <Btn onClick={() => startRetreat(dng)} full c="bg-amber-700 hover:bg-amber-600">
+        <Btn onClick={() => startRetreat(dng)} disabled={Boolean(pendingDeath)} full c="bg-amber-700 hover:bg-amber-600">
           Retreat to Town
         </Btn>
         {p.pot > 0 && p.hp < p.mhp && (
-          <Btn onClick={usePot} full c="bg-teal-700 hover:bg-teal-600">
+          <Btn onClick={usePot} disabled={Boolean(pendingDeath)} full c="bg-teal-700 hover:bg-teal-600">
             Drink Tonic ({p.pot})
           </Btn>
         )}
@@ -64,6 +76,7 @@ export function FloorHubView({
       <p className="text-center text-xs text-slate-500">
         Cargo {inv.length} items worth {invTotal}g
       </p>
+      </div>
     </div>
   );
 }

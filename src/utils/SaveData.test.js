@@ -45,6 +45,7 @@ describe("normalizeSave", () => {
 
     expect(normalized.p.luck).toBe(0);
     expect(normalized.inv[0].luck).toBe(0);
+    expect(normalized.inv[0].locked).toBe(false);
   });
 
   it("preserves cosmetic foe presentation fields in combat saves", () => {
