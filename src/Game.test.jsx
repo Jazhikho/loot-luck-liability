@@ -5,6 +5,7 @@ import Game from "./Game.jsx";
 import { CombatView } from "./screens/CombatView.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { TitleScreen } from "./screens/TitleScreen.jsx";
+import { getDungeonCatalog } from "./utils/DungeonCatalog.js";
 
 describe("Loot & Liability", () => {
   beforeEach(() => {
@@ -213,5 +214,35 @@ describe("Loot & Liability", () => {
     expect(payload.inventory.luckTotal).toBe(2);
     expect(payload.inventory.luckyItemCount).toBe(1);
     expect(payload.luckTier).toBe("fortunate");
+  });
+
+  it("shows newly discovered procedural dungeons after enough unlocks", async () => {
+    const discoveredDungeon = getDungeonCatalog([1, 2, 3, 4]).find((dungeon) => dungeon.generated);
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 2,
+        view: "shop",
+        p: { hp: 50, mhp: 50, atk: 5, def: 2, gold: 600, wlv: 1, alv: 1, pot: 2, luck: 0 },
+        inv: [],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2, 3, 4],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+
+    expect(await screen.findByRole("button", { name: new RegExp(discoveredDungeon.name, "i") })).toBeInTheDocument();
+    expect(screen.getByText("Fresh rumor")).toBeInTheDocument();
   });
 });

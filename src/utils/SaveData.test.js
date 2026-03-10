@@ -75,4 +75,24 @@ describe("normalizeSave", () => {
     expect(normalized.foe.displayName).toBe("Coin Wraith");
     expect(normalized.foe.encounterTitle).toBe("Lucky Find!");
   });
+
+  it("restores generated dungeons when their ids are in the unlocked list", () => {
+    const normalized = normalizeSave({
+      view: "floorHub",
+      p: { hp: 40, mhp: 50, atk: 5, def: 2, gold: 10, wlv: 1, alv: 1, pot: 1, luck: 0 },
+      inv: [],
+      dng: { id: 1001 },
+      fl: 2,
+      rooms: 1,
+      foe: null,
+      af: { type: "floorHub" },
+      unlocked: [1, 2, 3, 4, 1001],
+      rs: { earned: 0, slain: 0, deepest: 2, rooms: 1, clears: 0 },
+      log: [],
+    });
+
+    expect(normalized.view).toBe("floorHub");
+    expect(normalized.dng.id).toBe(1001);
+    expect(normalized.dng.generated).toBe(true);
+  });
 });
