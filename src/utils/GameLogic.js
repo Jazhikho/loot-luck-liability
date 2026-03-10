@@ -6,6 +6,41 @@ const WEAPON_ATK_BONUS = 4;
 const ARMOR_DEF_BONUS = 3;
 const ARMOR_HP_BONUS = 6;
 
+const LOOT_METADATA = {
+  uncommon: {
+    "Moonlit Bodhran with a Cracked Skin": { minTier: 1, minFloor: 1, weight: 1.1, floorScale: 0.18, tierScale: 0.14 },
+    "Cloak of the Last Call Prophet": { minTier: 2, minFloor: 2, weight: 0.9, floorScale: 0.32, tierScale: 0.42 },
+    "Bottle of Rainbow Sediment": { minTier: 2, minFloor: 3, weight: 0.85, floorScale: 0.35, tierScale: 0.45 },
+    "Ledger of Near-Missed Miracles": { minTier: 2, minFloor: 4, weight: 0.8, floorScale: 0.38, tierScale: 0.5 },
+    "Silver Spoon of the Seventh Pour": { minTier: 3, minFloor: 4, weight: 0.65, floorScale: 0.45, tierScale: 0.58 },
+  },
+  rare: {
+    "Leprechaun Bail Bond": { minTier: 1, minFloor: 1, weight: 1, floorScale: 0.16, tierScale: 0.14 },
+    "Emerald Poker from the Kindly Folk": { minTier: 2, minFloor: 3, weight: 0.9, floorScale: 0.28, tierScale: 0.36 },
+    "Crown Cork of the Golden Keg": { minTier: 2, minFloor: 3, weight: 0.9, floorScale: 0.26, tierScale: 0.32 },
+    "Fae Toll Bell on a Silk Chain": { minTier: 2, minFloor: 4, weight: 0.8, floorScale: 0.34, tierScale: 0.46 },
+    "Bogfire Lantern of Fortunate Missteps": { minTier: 3, minFloor: 5, weight: 0.7, floorScale: 0.4, tierScale: 0.58 },
+    "Coin Harp String Wound in Moon Gold": { minTier: 3, minFloor: 6, weight: 0.6, floorScale: 0.48, tierScale: 0.64 },
+  },
+  legendary: {
+    "Receipt from the End of the Rainbow": { minTier: 1, minFloor: 1, weight: 0.9, floorScale: 0.32, tierScale: 0.38 },
+    "The Broker's Blessed Corkscrew": { minTier: 2, minFloor: 5, weight: 0.82, floorScale: 0.36, tierScale: 0.44 },
+    "Clover-Cursed Treasury Seal": { minTier: 3, minFloor: 6, weight: 0.72, floorScale: 0.42, tierScale: 0.54 },
+    "Keg Crown of the Lucky Wake": { minTier: 3, minFloor: 6, weight: 0.68, floorScale: 0.44, tierScale: 0.56 },
+    "Harp String Cut from a Fae Moonbeam": { minTier: 3, minFloor: 7, weight: 0.62, floorScale: 0.5, tierScale: 0.62 },
+    "Final Coin from Saint Brigid's Poker Table": { minTier: 3, minFloor: 8, weight: 0.58, floorScale: 0.56, tierScale: 0.7 },
+  },
+};
+
+const DEFAULT_LOOT_META = {
+  minTier: 1,
+  minFloor: 1,
+  weight: 1,
+  floorScale: 0.08,
+  tierScale: 0.1,
+  roomScale: 0.02,
+};
+
 /**
  * Roll a loot item based on floor, tier, and rooms explored.
  * @param {number} floor
@@ -15,13 +50,13 @@ const ARMOR_HP_BONUS = 6;
  */
 export function rollLoot(floor, tier, rooms) {
   const r = Math.random() * 100;
-  const s = (floor + tier - 1) * 3 + rooms * 0.5;
+  const s = floor * 3.2 + tier * 4 + rooms * 0.8;
   let rarity;
-  if (r < 3 + s * 0.8) rarity = "legendary";
-  else if (r < 14 + s * 1.2) rarity = "rare";
-  else if (r < 40 + s) rarity = "uncommon";
+  if (r < 2 + s * 0.85) rarity = "legendary";
+  else if (r < 11 + s * 1.45) rarity = "rare";
+  else if (r < 34 + s * 1.1) rarity = "uncommon";
   else rarity = "common";
-  const item = pick(LOOT[rarity]);
+  const item = pickWeighted(getLootPoolSnapshot(rarity, floor, tier, rooms));
   const mult = 1 + floor * 0.15 + (tier - 1) * 0.25 + rooms * 0.03;
   return {
     name: item.n,
@@ -31,6 +66,46 @@ export function rollLoot(floor, tier, rooms) {
     rarity,
     id: makeId("loot"),
   };
+}
+
+function pickWeighted(pool) {
+  if (pool.length === 0) return null;
+  const totalWeight = pool.reduce((sum, entry) => sum + entry.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const entry of pool) {
+    roll -= entry.weight;
+    if (roll <= 0) return entry.item;
+  }
+  return pool[pool.length - 1].item;
+}
+
+function getLootMeta(rarity, item) {
+  return {
+    ...DEFAULT_LOOT_META,
+    ...(LOOT_METADATA[rarity]?.[item.n] || {}),
+  };
+}
+
+export function getLootPoolSnapshot(rarity, floor, tier, rooms) {
+  const pool = LOOT[rarity] || [];
+  const eligible = pool
+    .map((item) => {
+      const meta = getLootMeta(rarity, item);
+      return { item, meta };
+    })
+    .filter(({ meta }) => tier >= meta.minTier && floor >= meta.minFloor);
+
+  const source = eligible.length > 0 ? eligible : pool.map((item) => ({ item, meta: getLootMeta(rarity, item) }));
+
+  return source.map(({ item, meta }) => ({
+    item,
+    weight:
+      meta.weight *
+      (1 +
+        tier * meta.tierScale +
+        floor * meta.floorScale +
+        rooms * meta.roomScale),
+  }));
 }
 
 /**

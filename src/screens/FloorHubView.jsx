@@ -1,10 +1,25 @@
 import { Bar } from "../components/Bar.jsx";
 import { Btn } from "../components/Btn.jsx";
 import { DangerMeter } from "../components/DangerMeter.jsx";
+import { StoryPanel } from "../components/StoryPanel.jsx";
 
 /**
- * Floor hub: omens, HP, luck, explore / descend / retreat / potion.
- * @param {{ dng: Object, fl: number, rooms: number, p: Object, inv: Array, currentLuck: number, luckTier: { label: string }, enterFloor: (n: number, d: Object) => void, exploreRoom: () => void, startRetreat: (d: Object) => void, usePot: () => void }} props
+ * Floor hub: omens, HP, luck, story-forward room text, and room actions.
+ * @param {{
+ *   dng: Object,
+ *   fl: number,
+ *   rooms: number,
+ *   p: Object,
+ *   inv: Array,
+ *   currentLuck: number,
+ *   luckTier: { label: string },
+ *   enterFloor: (n: number, d: Object) => void,
+ *   exploreRoom: () => void,
+ *   startRetreat: (d: Object) => void,
+ *   usePot: () => void,
+ *   pendingDeath?: { message: string } | null,
+ *   storyEntries?: Array<{ msg: string, type: string, id?: string | number }>,
+ * }} props
  */
 export function FloorHubView({
   dng,
@@ -19,6 +34,7 @@ export function FloorHubView({
   startRetreat,
   usePot,
   pendingDeath = null,
+  storyEntries = [],
 }) {
   const invTotal = inv.reduce((sum, item) => sum + item.value, 0);
   const floorTradeoff =
@@ -33,49 +49,60 @@ export function FloorHubView({
   return (
     <div className="h-full overflow-y-auto pr-1">
       <div className="space-y-4">
-      <div className="text-center">
-        <h2 className="text-lg font-bold text-yellow-100">
-          {dng.e} Floor {fl}/{dng.floors}
-        </h2>
-        <p className="text-xs text-slate-400">Rooms searched: {rooms}</p>
-        <p className="mt-1 text-xs text-amber-200/80">{floorTradeoff}</p>
-      </div>
-      <div className="flex flex-col items-center gap-2">
-        <DangerMeter floor={fl} tier={dng.tier} roomCount={rooms} />
-        <div className="w-full max-w-xs">
-          <Bar cur={p.hp} max={p.mhp} label="Your HP" />
+        <div className="text-center">
+          <h2 className="text-lg font-bold text-yellow-100">
+            {dng.e} Floor {fl}/{dng.floors}
+          </h2>
+          <p className="text-xs text-slate-400">Rooms searched: {rooms}</p>
+          <p className="mt-1 text-xs text-amber-200/80">{floorTradeoff}</p>
         </div>
-        <p className="text-xs text-emerald-300">
-          Active Luck: {currentLuck} ({luckTier.label})
+        <div className="flex flex-col items-center gap-2">
+          <DangerMeter floor={fl} tier={dng.tier} roomCount={rooms} />
+          <div className="w-full max-w-xs">
+            <Bar cur={p.hp} max={p.mhp} label="Your HP" />
+          </div>
+          <p className="text-xs text-emerald-300">
+            Active Luck: {currentLuck} ({luckTier.label})
+          </p>
+        </div>
+        <p className="text-center text-xs italic text-slate-400">{hint}</p>
+        <StoryPanel
+          entries={storyEntries}
+          title="Dungeon Commentary"
+          subtitle="The room descriptions and bad omens should be loud enough to read without squinting at the footer."
+          compact
+        />
+        {pendingDeath && (
+          <div className="mx-auto max-w-sm rounded-lg border border-rose-400/50 bg-rose-950/70 px-3 py-2 text-center text-xs font-bold text-rose-100">
+            {pendingDeath.message}
+          </div>
+        )}
+        <div className="mx-auto max-w-xs space-y-2">
+          <Btn onClick={exploreRoom} disabled={Boolean(pendingDeath)} full c="bg-emerald-700 hover:bg-emerald-600">
+            Explore a Room
+          </Btn>
+          {fl < dng.floors && (
+            <Btn
+              onClick={() => enterFloor(fl + 1, dng)}
+              disabled={Boolean(pendingDeath)}
+              full
+              c="bg-cyan-700 hover:bg-cyan-600"
+            >
+              Descend to Floor {fl + 1}
+            </Btn>
+          )}
+          <Btn onClick={() => startRetreat(dng)} disabled={Boolean(pendingDeath)} full c="bg-amber-700 hover:bg-amber-600">
+            Retreat to Town
+          </Btn>
+          {p.pot > 0 && p.hp < p.mhp && (
+            <Btn onClick={usePot} disabled={Boolean(pendingDeath)} full c="bg-teal-700 hover:bg-teal-600">
+              Drink Tonic ({p.pot})
+            </Btn>
+          )}
+        </div>
+        <p className="text-center text-xs text-slate-500">
+          Cargo {inv.length} items worth {invTotal}g
         </p>
-      </div>
-      <p className="text-center text-xs italic text-slate-400">{hint}</p>
-      {pendingDeath && (
-        <div className="mx-auto max-w-sm rounded-lg border border-rose-400/50 bg-rose-950/70 px-3 py-2 text-center text-xs font-bold text-rose-100">
-          {pendingDeath.message}
-        </div>
-      )}
-      <div className="mx-auto max-w-xs space-y-2">
-        <Btn onClick={exploreRoom} disabled={Boolean(pendingDeath)} full c="bg-emerald-700 hover:bg-emerald-600">
-          Explore a Room
-        </Btn>
-        {fl < dng.floors && (
-          <Btn onClick={() => enterFloor(fl + 1, dng)} disabled={Boolean(pendingDeath)} full c="bg-cyan-700 hover:bg-cyan-600">
-            Descend to Floor {fl + 1}
-          </Btn>
-        )}
-        <Btn onClick={() => startRetreat(dng)} disabled={Boolean(pendingDeath)} full c="bg-amber-700 hover:bg-amber-600">
-          Retreat to Town
-        </Btn>
-        {p.pot > 0 && p.hp < p.mhp && (
-          <Btn onClick={usePot} disabled={Boolean(pendingDeath)} full c="bg-teal-700 hover:bg-teal-600">
-            Drink Tonic ({p.pot})
-          </Btn>
-        )}
-      </div>
-      <p className="text-center text-xs text-slate-500">
-        Cargo {inv.length} items worth {invTotal}g
-      </p>
       </div>
     </div>
   );

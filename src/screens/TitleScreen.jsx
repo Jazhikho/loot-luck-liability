@@ -61,6 +61,10 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
                 <p className="text-sm text-slate-300">Developed using Codex (GPT 5.4).</p>
               </div>
               <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">Playtesting</p>
+                <p className="text-sm text-slate-300">Joel Croteau, for playtesting and feedback.</p>
+              </div>
+              <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">Version</p>
                 <p className="text-sm text-slate-300">v{packageInfo.version}</p>
               </div>

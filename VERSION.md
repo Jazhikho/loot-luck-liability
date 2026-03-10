@@ -1,5 +1,12 @@
 # Version History
 
+## 1.4.1 - 2026-03-10
+
+- Added a playtesting credit for Joel Croteau in the title-screen credits.
+- Added a prominent low-HP town warning plus a confirmation step before leaving town hurt, while keeping Hearth Rest manual.
+- Reworked loot progression so deeper floors and stronger dungeons bias toward better and more advanced curios without hard-locking older finds out of the pool.
+- Promoted combat and dungeon narration into larger story panels so the humorous text reads like the centerpiece instead of footer noise.
+
 ## 1.4.0 - 2026-03-10
 
 - Reworked the play and ledger layouts to scroll internally so achievements, cargo, and the adventure log stay visible inside tighter windows.

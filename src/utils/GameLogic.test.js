@@ -1,13 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   getArmorUpgradeBenefit,
   getCombatWarning,
   getCurrentLuck,
   getLockedItemCount,
+  getLootPoolSnapshot,
   getLuckyItemCount,
   getLuckUpgradeCost,
   getSellableTotal,
   getWeaponUpgradeBenefit,
+  rollLoot,
 } from "./GameLogic.js";
 
 describe("GameLogic luck helpers", () => {
@@ -44,5 +46,38 @@ describe("GameLogic luck helpers", () => {
     expect(getWeaponUpgradeBenefit()).toEqual({ atk: 4 });
     expect(getArmorUpgradeBenefit()).toEqual({ def: 3, hp: 6 });
     expect(getCombatWarning({ hp: 6, mhp: 50, def: 2 }, { atk: 6 })).toMatch(/ends this run/i);
+  });
+
+  it("opens deeper, higher-tier loot within a rarity while keeping earlier loot eligible", () => {
+    const earlyRare = getLootPoolSnapshot("rare", 1, 1, 0).map((entry) => entry.item.n);
+    const deepRare = getLootPoolSnapshot("rare", 6, 3, 6);
+    const deepRareNames = deepRare.map((entry) => entry.item.n);
+
+    expect(earlyRare).toContain("Leprechaun Bail Bond");
+    expect(earlyRare).not.toContain("Coin Harp String Wound in Moon Gold");
+    expect(deepRareNames).toContain("Leprechaun Bail Bond");
+    expect(deepRareNames).toContain("Coin Harp String Wound in Moon Gold");
+    expect(
+      deepRare.find((entry) => entry.item.n === "Coin Harp String Wound in Moon Gold").weight
+    ).toBeGreaterThan(deepRare.find((entry) => entry.item.n === "Leprechaun Bail Bond").weight);
+  });
+
+  it("biases deeper runs toward better loot while keeping lower-tier finds possible", () => {
+    let seed = 123456789;
+    const randomSpy = vi.spyOn(Math, "random").mockImplementation(() => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    });
+
+    const rarityScore = { common: 1, uncommon: 2, rare: 3, legendary: 4 };
+    const early = Array.from({ length: 400 }, () => rollLoot(1, 1, 0));
+    const deep = Array.from({ length: 400 }, () => rollLoot(7, 3, 6));
+    randomSpy.mockRestore();
+
+    const averageScore = (drops) =>
+      drops.reduce((sum, item) => sum + rarityScore[item.rarity], 0) / drops.length;
+
+    expect(averageScore(deep)).toBeGreaterThan(averageScore(early));
+    expect(deep.some((item) => item.rarity === "common")).toBe(true);
   });
 });

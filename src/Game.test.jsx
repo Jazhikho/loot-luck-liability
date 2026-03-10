@@ -93,7 +93,9 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText("Jazhikho")).toBeInTheDocument();
     expect(screen.getByText(/Claude Sonnet/i)).toBeInTheDocument();
     expect(screen.getByText(/Codex \(GPT 5\.4\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/v1\.4\.0/i)).toBeInTheDocument();
+    expect(screen.getByText(/Joel Croteau/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Timbot/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/v1\.4\.1/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Back to Title" }));
     expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();
@@ -168,6 +170,25 @@ describe("Loot, Luck & Liability", () => {
     );
 
     expect(screen.getByText(/one bad hit or failed bolt ends this run/i)).toBeInTheDocument();
+  });
+
+  it("shows the newest combat text in a central story panel", () => {
+    render(
+      <CombatView
+        foe={{ name: "Coin Wraith", emoji: "W", hp: 10, maxHp: 10, atk: 6, def: 1 }}
+        p={{ hp: 10, mhp: 20, def: 2, pot: 1 }}
+        doAttack={vi.fn()}
+        usePot={vi.fn()}
+        doFlee={vi.fn()}
+        storyEntries={[
+          { id: "1", msg: "The coin wraith hisses about the RNG.", type: "bad" },
+          { id: "2", msg: "You trip, recover, and somehow land a perfect hit.", type: "hit" },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Battle Chatter")).toBeInTheDocument();
+    expect(screen.getByText(/You trip, recover, and somehow land a perfect hit\./i)).toBeInTheDocument();
   });
 
   it("buys run luck upgrades at the fixed cost and updates the display", async () => {
@@ -330,5 +351,112 @@ describe("Loot, Luck & Liability", () => {
 
     expect(await screen.findByRole("button", { name: new RegExp(discoveredDungeon.name, "i") })).toBeInTheDocument();
     expect(screen.getByText("Fresh rumor")).toBeInTheDocument();
+  });
+
+  it("warns before leaving town hurt and lets the player cancel", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 3,
+        view: "shop",
+        p: { hp: 18, mhp: 50, atk: 5, def: 2, gold: 25, wlv: 1, alv: 1, pot: 2, luck: 0 },
+        inv: [],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    expect(screen.getByText(/You are still hurt\./i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+
+    expect(screen.getByText(/You're heading out at 18\/50 HP/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.getByRole("heading", { name: "The Broker's Snug" })).toBeInTheDocument();
+    expect(screen.queryByText(/Leave town while hurt\?/i)).not.toBeInTheDocument();
+  });
+
+  it("lets a hurt player confirm the warning and continue to dungeon selection", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 3,
+        view: "shop",
+        p: { hp: 18, mhp: 50, atk: 5, def: 2, gold: 25, wlv: 1, alv: 1, pot: 2, luck: 0 },
+        inv: [],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+    await user.click(screen.getByRole("button", { name: "Leave Hurt Anyway" }));
+
+    expect(await screen.findByRole("heading", { name: /Choose a Fortune Hunt/i })).toBeInTheDocument();
+  });
+
+  it("goes straight to dungeon selection when leaving town at full health", async () => {
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await user.click(screen.getByRole("button", { name: "Start Adventuring" }));
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+
+    expect(await screen.findByRole("heading", { name: /Choose a Fortune Hunt/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Leave town while hurt\?/i)).not.toBeInTheDocument();
+  });
+
+  it("exposes departure warnings and story state through render_game_to_text", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 3,
+        view: "shop",
+        p: { hp: 18, mhp: 50, atk: 5, def: 2, gold: 10, wlv: 1, alv: 1, pot: 2, luck: 1 },
+        inv: [{ id: "lucky-2", name: "Charm", value: 12, emoji: "C", rarity: "common", luck: 1 }],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [{ id: "log-1", msg: "The snug eyes your bandages suspiciously.", type: "warn" }],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+    const payload = JSON.parse(window.render_game_to_text());
+
+    expect(payload.departureWarningOpen).toBe(true);
+    expect(payload.story.latest).toBe("The snug eyes your bandages suspiciously.");
+    expect(payload.story.recent).toContain("The snug eyes your bandages suspiciously.");
   });
 });

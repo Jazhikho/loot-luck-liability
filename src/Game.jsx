@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ToastLayer } from "./components/ToastLayer.jsx";
 import { LogBox } from "./components/LogBox.jsx";
 import { StatsBar } from "./components/StatsBar.jsx";
+import { ConfirmDialog } from "./components/ConfirmDialog.jsx";
 import { TitleScreen } from "./screens/TitleScreen.jsx";
 import { DeadScreen } from "./screens/DeadScreen.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
@@ -77,6 +78,7 @@ export default function Game() {
   const [profTab, setProfTab] = useState("stats");
   const [prevView, setPrevView] = useState("title");
   const [pendingDeath, setPendingDeath] = useState(null);
+  const [departureWarningOpen, setDepartureWarningOpen] = useState(false);
 
   const logRef = useRef(null);
   const loaded = useRef(false);
@@ -93,6 +95,8 @@ export default function Game() {
   const dungeonCatalog = getDungeonCatalog(unlocked);
   const weaponBonus = getWeaponUpgradeBenefit();
   const armorBonus = getArmorUpgradeBenefit();
+  const storyEntries = log.slice(-4);
+  const latestStory = storyEntries.at(-1) || null;
 
   const clearPendingDeath = useCallback(() => {
     if (deathTimerRef.current) {
@@ -158,6 +162,7 @@ export default function Game() {
   );
 
   const loadSaveIntoState = useCallback((save) => {
+    setDepartureWarningOpen(false);
     setView(save.view || "shop");
     setP(save.p || DEF_P);
     setInv(save.inv || []);
@@ -277,6 +282,11 @@ export default function Game() {
               def: foe.def,
             }
           : null,
+        story: {
+          latest: latestStory?.msg || "",
+          recent: storyEntries.map((entry) => entry.msg),
+        },
+        departureWarningOpen,
         runStats: rs,
       });
     window.advanceTime = () => {};
@@ -285,7 +295,7 @@ export default function Game() {
       delete window.render_game_to_text;
       delete window.advanceTime;
     };
-  }, [view, p, inv, dng, fl, rooms, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier]);
+  }, [view, p, inv, dng, fl, rooms, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier, log, departureWarningOpen]);
 
   const recordHs = useCallback(() => {
     const entry = {
@@ -334,6 +344,7 @@ export default function Game() {
 
   const goShop = useCallback(() => {
     clearPendingDeath();
+    setDepartureWarningOpen(false);
     setView("shop");
     setMQuote(pick(GREETINGS));
     setDng(null);
@@ -351,6 +362,7 @@ export default function Game() {
 
   const resetRun = useCallback(() => {
     clearPendingDeath();
+    setDepartureWarningOpen(false);
     setP({ ...DEF_P });
     setInv([]);
     setDng(null);
@@ -536,6 +548,7 @@ export default function Game() {
   };
 
   const startJourney = (dungeonData) => {
+    setDepartureWarningOpen(false);
     setDng(dungeonData);
     setFl(0);
     setRooms(0);
@@ -701,7 +714,7 @@ export default function Game() {
 
     const enemyDamage = Math.max(1, foe.atk - p.def + rand(-1, 2));
     const nextPlayerHp = p.hp - enemyDamage;
-      const enemyAttack = decorateEnemyAttackOutcome(
+    const enemyAttack = decorateEnemyAttackOutcome(
       { attackerName: foe.displayName || foe.name, damage: enemyDamage },
       currentLuck
     );
@@ -820,6 +833,15 @@ export default function Game() {
     setView("title");
   };
 
+  const openDungeonPicker = useCallback(() => {
+    if (p.hp >= p.mhp) {
+      setDepartureWarningOpen(false);
+      setView("pick");
+      return;
+    }
+    setDepartureWarningOpen(true);
+  }, [p.hp, p.mhp]);
+
   const activeView =
     view === "combat" && !foe ? (dng ? "floorHub" : "shop") : view === "floorHub" && !dng ? "shop" : view;
 
@@ -850,6 +872,18 @@ export default function Game() {
   return (
     <div className="h-screen overflow-hidden bg-slate-950/95 p-3 text-white">
       <ToastLayer toasts={toasts} />
+      <ConfirmDialog
+        open={departureWarningOpen}
+        title="Leave town while hurt?"
+        body={`You're heading out at ${p.hp}/${p.mhp} HP. Hearth Rest in the snug will refill you before the next run. Leave town hurt anyway?`}
+        confirmLabel="Leave Hurt Anyway"
+        onConfirm={() => {
+          setDepartureWarningOpen(false);
+          setView("pick");
+        }}
+        onCancel={() => setDepartureWarningOpen(false)}
+        tone="bg-amber-700 hover:bg-amber-600"
+      />
       <div className="mx-auto flex h-[calc(100vh-1.5rem)] max-w-2xl min-h-0 flex-col gap-3">
         <div className="flex items-center justify-between">
           <div>
@@ -887,7 +921,7 @@ export default function Game() {
               upgLuck={upgLuck}
               buyPot={buyPot}
               restInn={restInn}
-              setView={setView}
+              openDungeonPicker={openDungeonPicker}
               upgCost={upgCost}
               luckCost={getLuckUpgradeCost(p.luck)}
               currentLuck={currentLuck}
@@ -910,7 +944,15 @@ export default function Game() {
             </div>
           )}
           {activeView === "combat" && (
-            <CombatView foe={foe} p={p} doAttack={doAttack} usePot={usePot} doFlee={doFlee} pendingDeath={pendingDeath} />
+            <CombatView
+              foe={foe}
+              p={p}
+              doAttack={doAttack}
+              usePot={usePot}
+              doFlee={doFlee}
+              pendingDeath={pendingDeath}
+              storyEntries={storyEntries}
+            />
           )}
           {activeView === "floorHub" && (
             <FloorHubView
@@ -926,10 +968,11 @@ export default function Game() {
               startRetreat={startRetreat}
               usePot={usePot}
               pendingDeath={pendingDeath}
+              storyEntries={storyEntries}
             />
           )}
         </div>
-        <LogBox logRef={logRef} log={log} />
+        {activeView !== "combat" && activeView !== "floorHub" && <LogBox logRef={logRef} log={log} />}
       </div>
     </div>
   );

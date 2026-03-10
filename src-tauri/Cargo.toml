@@ -1,6 +1,6 @@
 [package]
 name = "loot_luck_liability"
-version = "1.4.0"
+version = "1.4.1"
 description = "Loot, Luck & Liability desktop wrapper"
 authors = ["Jazhikho"]
 license = ""
