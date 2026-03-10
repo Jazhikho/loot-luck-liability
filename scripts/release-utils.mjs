@@ -15,16 +15,30 @@ export function toPlatformPath(p) {
 }
 
 export function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
-    cwd: rootDir,
-    stdio: "inherit",
-    shell: process.platform === "win32",
-    ...options,
-  });
+  const result =
+    process.platform === "win32"
+      ? spawnSync("cmd.exe", ["/d", "/s", "/c", [command, ...args].map(quoteWindowsArg).join(" ")], {
+          cwd: rootDir,
+          stdio: "inherit",
+          shell: false,
+          ...options,
+        })
+      : spawnSync(command, args, {
+          cwd: rootDir,
+          stdio: "inherit",
+          shell: false,
+          ...options,
+        });
 
   if (result.status !== 0) {
     throw new Error(`Command failed: ${command} ${args.join(" ")}`);
   }
+}
+
+function quoteWindowsArg(value) {
+  if (value.length === 0) return '""';
+  if (!/[\s"&()^<>|]/.test(value)) return value;
+  return `"${value.replace(/(\\*)"/g, "$1$1\\\"").replace(/(\\+)$/g, "$1$1")}"`;
 }
 
 export function ensureDir(dir) {
@@ -71,7 +85,9 @@ export function resolveSdkRoot() {
   const candidates = [
     process.env.ANDROID_SDK_ROOT,
     process.env.ANDROID_HOME,
+    path.join("D:\\", "Android"),
     path.join(process.env.LOCALAPPDATA || "", "Android", "Sdk"),
+    path.join("C:\\", "Program Files (x86)", "Android", "android-sdk"),
     path.join(
       process.env.LOCALAPPDATA || "",
       "Microsoft",
@@ -80,5 +96,10 @@ export function resolveSdkRoot() {
       "Google.PlatformTools_Microsoft.Winget.Source_8wekyb3d8bbwe"
     ),
   ].filter(Boolean);
+  return candidates.find((candidate) => fs.existsSync(candidate)) || null;
+}
+
+export function resolveJavaHome() {
+  const candidates = [process.env.JAVA_HOME, path.join("C:\\", "Program Files", "Android", "Android Studio", "jbr")].filter(Boolean);
   return candidates.find((candidate) => fs.existsSync(candidate)) || null;
 }

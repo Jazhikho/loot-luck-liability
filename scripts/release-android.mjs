@@ -1,6 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
-import { copyFile, emptyDir, printButlerHint, releaseDir, requireEnv, resolveSdkRoot, run, version } from "./release-utils.mjs";
+import {
+  copyFile,
+  emptyDir,
+  printButlerHint,
+  releaseDir,
+  requireEnv,
+  resolveJavaHome,
+  resolveSdkRoot,
+  run,
+  version,
+} from "./release-utils.mjs";
 
 const targetDir = path.join(releaseDir, "android");
 const projectRoot = path.dirname(releaseDir);
@@ -27,10 +37,20 @@ function ensureAndroidSdkReady() {
 emptyDir(targetDir);
 ensureAndroidSdkReady();
 
+const javaHome = resolveJavaHome();
+if (javaHome) {
+  process.env.JAVA_HOME = javaHome;
+  process.env.PATH = `${path.join(javaHome, "bin")}${path.delimiter}${process.env.PATH || ""}`;
+}
+
 const keystorePath = requireEnv("ANDROID_KEYSTORE_PATH");
 const keystorePassword = requireEnv("ANDROID_KEYSTORE_PASSWORD");
 const keyAlias = requireEnv("ANDROID_KEY_ALIAS");
 const keyAliasPassword = requireEnv("ANDROID_KEY_ALIAS_PASSWORD");
+
+if (!fs.existsSync(keystorePath)) {
+  throw new Error(`Android keystore not found: ${keystorePath}`);
+}
 
 run("npm", ["run", "build"]);
 run("npx", ["cap", "sync", "android"]);

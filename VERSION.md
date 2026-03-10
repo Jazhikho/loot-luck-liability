@@ -1,5 +1,10 @@
 # Version History
 
+## 1.3.1 - 2026-03-10
+
+- Fixed the release pipeline on Windows so Android signing arguments survive special characters in keystore passwords.
+- Taught the Android release runner to prefer the installed `D:\Android` SDK and Android Studio JBR automatically.
+
 ## 1.3.0 - 2026-03-10
 
 - Added Tauri and Capacitor release scaffolding plus scripted `release/` packaging targets for web, Windows, and Android.
