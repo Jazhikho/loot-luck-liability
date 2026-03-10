@@ -1,5 +1,10 @@
 # Version History
 
+## 1.2.2 - 2026-03-10
+
+- Greatly expanded enemy banter with more varied lines and stronger fourth-wall jokes about the Dev, seeds, and RNG.
+- Made clover-cursed encounters lean harder into meta dialogue while grounded runs stay more in-world.
+
 ## 1.2.1 - 2026-03-10
 
 - Updated the visible game title to `Loot, Luck & Liability` across the main UI.

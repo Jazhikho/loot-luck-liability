@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   decorateAttackOutcome,
   decorateDeathOutcome,
+  decorateEnemyAttackOutcome,
+  decorateEnemyDefeatOutcome,
   decorateLootOutcome,
   decorateMonsterEncounter,
   getLuckTier,
@@ -52,6 +54,23 @@ describe("LuckPresentation", () => {
     expect(grounded.encounterTitle).toBe("");
   });
 
+  it("uses fourth-wall enemy dialogue at clover-cursed luck", () => {
+    const encounter = decorateMonsterEncounter(
+      {
+        monster: { name: "Pub Goblin", hp: 12, maxHp: 12, atk: 3, def: 1 },
+        floor: 1,
+        rooms: 1,
+      },
+      8
+    );
+    const enemyAttack = decorateEnemyAttackOutcome({ attackerName: "Pub Goblin", damage: 4 }, 8);
+    const defeat = decorateEnemyDefeatOutcome({ foeName: "Pub Goblin" }, 8);
+
+    expect(encounter.message).toMatch(/Dev|RNG|seed|patch|algorithm/i);
+    expect(enemyAttack.message).toMatch(/RNG|Dev|seed|frame|engine|procedural/i);
+    expect(defeat.message).toMatch(/Dev|RNG|patch|analytics|bug report|loading screen/i);
+  });
+
   it("only reframes already-resolved death outcomes", () => {
     const death = { cause: "trap", foeName: null };
 
@@ -61,5 +80,11 @@ describe("LuckPresentation", () => {
     expect(grounded.cause).toBe("trap");
     expect(cursed.cause).toBe("trap");
     expect(cursed.message).toMatch(/gold|lucky/i);
+  });
+
+  it("keeps grounded banter out of fourth-wall mode at low luck", () => {
+    const attack = decorateAttackOutcome({ targetName: "Coin Wraith", damage: 5, highRoll: false }, 0);
+
+    expect(attack.message).not.toMatch(/Dev|RNG|patch|seed|analytics|engine/i);
   });
 });

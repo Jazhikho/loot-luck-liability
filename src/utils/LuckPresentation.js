@@ -5,32 +5,99 @@ const LUCK_TIERS = [
   { key: "clover-cursed", label: "Clover-Cursed", max: Number.POSITIVE_INFINITY, absurdChance: 100 },
 ];
 
-const ENCOUNTER_QUOTES = [
+const BASE_ENCOUNTER_QUOTES = [
   "Pay the toll or become the lesson.",
   "I've already spent your gold in my head.",
   "Stand still. I fight better against surprised bookkeeping.",
   "Lovely weather for a regrettable ambush.",
+  "Try not to bleed on the valuables. They're rented.",
+  "You smell like optimism and terrible planning.",
+  "I was promised an easy traveler, not a situation.",
+  "Nobody told me the prey would arrive armed and judgmental.",
+  "I practiced that entrance all afternoon. Respect the craft.",
+  "Let's keep this professional, by which I mean loud and unfair.",
 ];
 
-const HURT_QUOTES = [
+const META_ENCOUNTER_QUOTES = [
+  "Did the Dev really spawn you here with that loadout?",
+  "I can hear the RNG rattling in the walls already.",
+  "This seed was supposed to go my way. I checked.",
+  "If this is another difficulty spike, I'm writing patch notes in blood.",
+  "You look like the sort of player who saves before bad ideas.",
+  "I know a scripted encounter when I see one, and I resent it.",
+  "Fantastic. The Dev gave you plot armor and gave me attitude.",
+  "The algorithm loves you and I find that deeply unprofessional.",
+];
+
+const BASE_HURT_QUOTES = [
   "Oi! That's an organ!",
   "That was supposed to miss. We rehearsed this.",
   "You can't just stab a working professional.",
   "I demand a rematch with less humiliation.",
+  "That was my favorite rib. Emotionally, if not structurally.",
+  "I felt that in several future regrets.",
+  "That's not combat, that's targeted embarrassment.",
+  "Could you at least pretend this is difficult?",
+  "I object to being turned into a cautionary tale.",
+  "You swing like a tax audit in boots.",
 ];
 
-const ATTACK_QUOTES = [
+const META_HURT_QUOTES = [
+  "That hitbox is a slander campaign.",
+  "The RNG sold me out in broad daylight.",
+  "I'm reporting that crit directly to the Dev.",
+  "You can't just frame-perfect my dignity offscreen.",
+  "Was that in the patch notes, or are you freelancing?",
+  "This seed has become hostile to labor.",
+  "I demand a balance pass and several apologies.",
+  "I should have alt-tabbed before that landed.",
+];
+
+const BASE_ATTACK_QUOTES = [
   "Hold still, you're making this assault look amateur.",
   "The union says I get one cheap shot per traveler.",
   "This is why nobody trusts lucky people.",
   "Consider this a very personal toll.",
+  "Try flinching in a more profitable direction.",
+  "If you dodge, I will take it as disrespect.",
+  "This one's for every cartwheel of yours I had to watch.",
+  "I'm charging extra for dramatic contact.",
+  "Don't take this personally. Do take it physically.",
+  "You're about to lose an argument with blunt force.",
 ];
 
-const DEFEAT_QUOTES = [
+const META_ATTACK_QUOTES = [
+  "The RNG says it's my turn now. Legally binding.",
+  "Watch this, the Dev finally remembered my attack animation.",
+  "I'm cashing in the pity roll the engine owes me.",
+  "If this whiffs, blame procedural comedy.",
+  "The seed says yes, the frame data says maybe.",
+  "I was background flavor ten seconds ago. Now look at me.",
+  "This is what happens when the encounter table gets ambitious.",
+  "Let's see if your protagonist privileges cover dental.",
+];
+
+const BASE_DEFEAT_QUOTES = [
   "Tell the broker this settles nothing...",
-  "I'm taking this up with fate.",
   "I knew I should've mugged a priest instead.",
   "This is embarrassingly on brand for my week.",
+  "I've had better shifts. Marginally.",
+  "Tell the afterlife I was carrying the team.",
+  "I leave this encounter with no gold and several opinions.",
+  "This feels like the kind of loss people laugh at in taverns.",
+  "Bury me with my dignity if you can still locate it.",
+  "Next time I'm ambushing someone with worse reflexes.",
+];
+
+const META_DEFEAT_QUOTES = [
+  "I'm taking this up with the Dev.",
+  "Tell the RNG I said this seed is fraudulent.",
+  "Wonderful. I die, you win, and the patch notes call it flavor.",
+  "I'm filing a bug report titled 'player keeps being rude with damage.'",
+  "The Dev overtuned your nonsense and undertuned my union protections.",
+  "This encounter was rigged from the loading screen.",
+  "I hope the analytics show how unfair this felt.",
+  "If anyone asks, I lost to a balancing issue, not you.",
 ];
 
 function hashSeed(seed) {
@@ -45,8 +112,19 @@ function pickVariant(seed, options) {
   return options[hashSeed(seed) % options.length];
 }
 
-function quoteFor(name, pool, salt) {
-  return `"${pickVariant(`${salt}:${name}`, pool)}"`;
+function pickDialogue(name, basePool, metaPool, salt, luck) {
+  const tier = getLuckTier(luck).key;
+  if (tier === "clover-cursed") return pickVariant(`${salt}:meta:${name}`, metaPool);
+
+  const metaRoll = hashSeed(`meta-roll:${salt}:${name}`) % 100;
+  if (tier === "uncanny" && metaRoll < 55) return pickVariant(`${salt}:meta:${name}`, metaPool);
+  if (tier === "fortunate" && metaRoll < 20) return pickVariant(`${salt}:meta:${name}`, metaPool);
+
+  return pickVariant(`${salt}:base:${name}`, basePool);
+}
+
+function quoteFor(name, basePool, metaPool, salt, luck) {
+  return `"${pickDialogue(name, basePool, metaPool, salt, luck)}"`;
 }
 
 function shouldGoAbsurd(luck, seed) {
@@ -61,7 +139,7 @@ export function getLuckTier(luck) {
 
 export function decorateAttackOutcome(outcome, luck) {
   const seed = `attack:${outcome.targetName}:${outcome.damage}:${outcome.highRoll}`;
-  const reaction = quoteFor(outcome.targetName, HURT_QUOTES, "hurt");
+  const reaction = quoteFor(outcome.targetName, BASE_HURT_QUOTES, META_HURT_QUOTES, "hurt", luck);
   if (outcome.highRoll && shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
@@ -81,7 +159,7 @@ export function decorateAttackOutcome(outcome, luck) {
 
 export function decorateEnemyAttackOutcome(outcome, luck) {
   const seed = `enemy-hit:${outcome.attackerName}:${outcome.damage}`;
-  const banter = quoteFor(outcome.attackerName, ATTACK_QUOTES, "enemy-attack");
+  const banter = quoteFor(outcome.attackerName, BASE_ATTACK_QUOTES, META_ATTACK_QUOTES, "enemy-attack", luck);
   if (shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
@@ -101,7 +179,7 @@ export function decorateEnemyAttackOutcome(outcome, luck) {
 
 export function decorateEnemyDefeatOutcome(outcome, luck) {
   const seed = `enemy-defeat:${outcome.foeName}`;
-  const lastWords = quoteFor(outcome.foeName, DEFEAT_QUOTES, "defeat");
+  const lastWords = quoteFor(outcome.foeName, BASE_DEFEAT_QUOTES, META_DEFEAT_QUOTES, "defeat", luck);
   if (shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
@@ -148,7 +226,7 @@ export function decorateDeathOutcome(outcome, luck) {
 
 export function decorateMonsterEncounter(outcome, luck) {
   const seed = `monster:${outcome.monster.name}:${outcome.floor}:${outcome.rooms}`;
-  const greeting = quoteFor(outcome.monster.name, ENCOUNTER_QUOTES, "encounter");
+  const greeting = quoteFor(outcome.monster.name, BASE_ENCOUNTER_QUOTES, META_ENCOUNTER_QUOTES, "encounter", luck);
   if (luck >= 8 && shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
