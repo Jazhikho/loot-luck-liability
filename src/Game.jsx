@@ -809,7 +809,6 @@ export default function Game() {
             <h1 className="bg-gradient-to-r from-emerald-300 via-yellow-200 to-amber-300 bg-clip-text text-lg font-bold text-transparent">
               Loot, Luck &amp; Liability
             </h1>
-            <p className="text-xs text-emerald-200/70">St. Paddy's Roguelite Jam Edition</p>
           </div>
           <div className="flex items-center gap-2">
             {dng && fl > 0 && (

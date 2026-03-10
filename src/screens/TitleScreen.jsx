@@ -65,8 +65,7 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
                 <p className="text-sm text-slate-300">v{packageInfo.version}</p>
               </div>
               <p className="text-sm leading-relaxed text-slate-400">
-                Built for a St. Paddy&apos;s roguelite jam, with cursed gold, suspicious luck, and monsters who know the
-                engine is watching.
+                A folk-chaos loot run about cursed gold, suspicious luck, and monsters who know the engine is watching.
               </p>
             </div>
             <button
@@ -83,7 +82,6 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
             <h1 className="mb-1 bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
               Loot, Luck &amp; Liability
             </h1>
-            <p className="mb-2 text-sm uppercase tracking-[0.25em] text-emerald-200/70">St. Paddy&apos;s Jam Cut</p>
             <p className="mb-2 italic text-yellow-100/80">{GAME_TAGLINE}</p>
             <p className="mb-6 text-sm leading-relaxed text-slate-400">{GAME_BLURB}</p>
             <div className="space-y-2">

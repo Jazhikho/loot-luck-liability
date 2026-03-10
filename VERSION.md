@@ -1,5 +1,11 @@
 # Version History
 
+## 1.3.0 - 2026-03-10
+
+- Added Tauri and Capacitor release scaffolding plus scripted `release/` packaging targets for web, Windows, and Android.
+- Added a reproducible `LLL.png` asset sync path for the browser favicon plus Windows and Android launcher art.
+- Added a versioned credits screen, removed the jam subtitle from the main title UI, and aligned native wrapper metadata, browser title, and itch.io release commands with the live game version.
+
 ## 1.2.3 - 2026-03-10
 
 - Added a credits view on the title screen with dev, prototype, Codex, and version attribution.
