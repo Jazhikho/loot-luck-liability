@@ -1,6 +1,6 @@
-import { DUNGEONS } from "../data/Constants.js";
 import { DEF_P, DEF_RS } from "../data/Defaults.js";
 import { makeId } from "./Helpers.js";
+import { getDungeonCatalog, isKnownDungeonId } from "./DungeonCatalog.js";
 
 export const SAVE_VERSION = 2;
 
@@ -51,9 +51,9 @@ function sanitizeInventory(raw) {
     }));
 }
 
-function sanitizeDungeon(raw) {
+function sanitizeDungeon(raw, catalog) {
   if (!isRecord(raw)) return null;
-  return DUNGEONS.find((dungeon) => dungeon.id === raw.id) || null;
+  return catalog.find((dungeon) => dungeon.id === raw.id) || null;
 }
 
 function sanitizeFoe(raw) {
@@ -91,7 +91,7 @@ function sanitizeUnlocked(raw) {
   if (!Array.isArray(raw)) return [...DEFAULT_UNLOCKED];
   const ids = new Set(DEFAULT_UNLOCKED);
   raw.forEach((value) => {
-    if (Number.isInteger(value) && DUNGEONS.some((dungeon) => dungeon.id === value)) ids.add(value);
+    if (Number.isInteger(value) && isKnownDungeonId(value)) ids.add(value);
   });
   return [...ids].sort((a, b) => a - b);
 }
@@ -125,7 +125,9 @@ export function normalizeSave(raw) {
   const player = sanitizePlayer(raw.p);
   player.hp = Math.min(player.hp, player.mhp);
 
-  const dungeon = sanitizeDungeon(raw.dng);
+  const unlocked = sanitizeUnlocked(raw.unlocked);
+  const catalog = getDungeonCatalog(unlocked);
+  const dungeon = sanitizeDungeon(raw.dng, catalog);
   const floor = dungeon ? toFiniteInt(raw.fl, 0, 0, dungeon.floors) : 0;
   const foe = sanitizeFoe(raw.foe);
   const normalized = {
@@ -135,13 +137,13 @@ export function normalizeSave(raw) {
     inv: sanitizeInventory(raw.inv),
     dng: dungeon,
     fl: floor,
-    rooms: toFiniteInt(raw.rooms, 0, 0),
-    foe,
-    af: sanitizeAfterFight(raw.af, dungeon, floor),
-    unlocked: sanitizeUnlocked(raw.unlocked),
-    rs: sanitizeRunStats(raw.rs),
-    log: sanitizeLog(raw.log),
-  };
+      rooms: toFiniteInt(raw.rooms, 0, 0),
+      foe,
+      af: sanitizeAfterFight(raw.af, dungeon, floor),
+      unlocked,
+      rs: sanitizeRunStats(raw.rs),
+      log: sanitizeLog(raw.log),
+    };
 
   if (normalized.view === "combat" && !normalized.foe) normalized.view = dungeon ? "floorHub" : "shop";
   if (normalized.view === "floorHub" && !normalized.dng) normalized.view = "shop";

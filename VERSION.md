@@ -1,5 +1,11 @@
 # Version History
 
+## 1.2.0 - 2026-03-10
+
+- Added enemy banter and more comedic combat narration so encounters feel more like a taunting tavern disaster.
+- Added deterministic procedural dungeon discovery that expands the unlock list as more dungeons are opened.
+- Extended save handling and tests so generated dungeons and their unlock flow restore safely.
+
 ## 1.1.0 - 2026-03-10
 
 - Rethemed the game for the St. Paddy's jam with new dungeon, monster, loot, and UI flavor.

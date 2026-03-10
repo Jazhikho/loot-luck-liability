@@ -1,11 +1,10 @@
 import { Btn } from "../components/Btn.jsx";
-import { DUNGEONS } from "../data/Constants.js";
 
 /**
- * Dungeon picker: list dungeons, start journey or unlock.
- * @param {{ unlocked: number[], goShop: () => void, startJourney: (d: Object) => void, unlockDungeon: (d: Object) => void }} props
+ * Dungeon picker: list known dungeons, start journey or unlock.
+ * @param {{ dungeons: Object[], unlocked: number[], goShop: () => void, startJourney: (d: Object) => void, unlockDungeon: (d: Object) => void }} props
  */
-export function PickDungeonView({ unlocked, goShop, startJourney, unlockDungeon }) {
+export function PickDungeonView({ dungeons, unlocked, goShop, startJourney, unlockDungeon }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -15,7 +14,7 @@ export function PickDungeonView({ unlocked, goShop, startJourney, unlockDungeon 
         </Btn>
       </div>
       <div className="space-y-2">
-        {DUNGEONS.map((dungeon) => {
+        {dungeons.map((dungeon) => {
           const unlockedDungeon = unlocked.includes(dungeon.id);
           return (
             <button
@@ -32,9 +31,10 @@ export function PickDungeonView({ unlocked, goShop, startJourney, unlockDungeon 
                 <span className="text-sm font-bold text-white">
                   {dungeon.e} {dungeon.name}
                 </span>
-                <span className="text-xs text-slate-400">
-                  {unlockedDungeon ? `${dungeon.floors} floors` : `Unlock ${dungeon.cost}g`}
-                </span>
+                <div className="text-right text-xs text-slate-400">
+                  <div>{unlockedDungeon ? `${dungeon.floors} floors` : `Unlock ${dungeon.cost}g`}</div>
+                  {dungeon.generated && <div className="text-emerald-300/80">Fresh rumor</div>}
+                </div>
               </div>
               <p className="text-xs text-slate-400">{dungeon.desc}</p>
               <div className="mt-0.5 text-xs text-emerald-200/70">

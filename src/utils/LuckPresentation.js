@@ -5,6 +5,34 @@ const LUCK_TIERS = [
   { key: "clover-cursed", label: "Clover-Cursed", max: Number.POSITIVE_INFINITY, absurdChance: 100 },
 ];
 
+const ENCOUNTER_QUOTES = [
+  "Pay the toll or become the lesson.",
+  "I've already spent your gold in my head.",
+  "Stand still. I fight better against surprised bookkeeping.",
+  "Lovely weather for a regrettable ambush.",
+];
+
+const HURT_QUOTES = [
+  "Oi! That's an organ!",
+  "That was supposed to miss. We rehearsed this.",
+  "You can't just stab a working professional.",
+  "I demand a rematch with less humiliation.",
+];
+
+const ATTACK_QUOTES = [
+  "Hold still, you're making this assault look amateur.",
+  "The union says I get one cheap shot per traveler.",
+  "This is why nobody trusts lucky people.",
+  "Consider this a very personal toll.",
+];
+
+const DEFEAT_QUOTES = [
+  "Tell the broker this settles nothing...",
+  "I'm taking this up with fate.",
+  "I knew I should've mugged a priest instead.",
+  "This is embarrassingly on brand for my week.",
+];
+
 function hashSeed(seed) {
   let hash = 0;
   for (let index = 0; index < seed.length; index += 1) {
@@ -15,6 +43,10 @@ function hashSeed(seed) {
 
 function pickVariant(seed, options) {
   return options[hashSeed(seed) % options.length];
+}
+
+function quoteFor(name, pool, salt) {
+  return `"${pickVariant(`${salt}:${name}`, pool)}"`;
 }
 
 function shouldGoAbsurd(luck, seed) {
@@ -29,58 +61,61 @@ export function getLuckTier(luck) {
 
 export function decorateAttackOutcome(outcome, luck) {
   const seed = `attack:${outcome.targetName}:${outcome.damage}:${outcome.highRoll}`;
+  const reaction = quoteFor(outcome.targetName, HURT_QUOTES, "hurt");
   if (outcome.highRoll && shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
       message: pickVariant(seed, [
-        `You slip on a lucky puddle and accidentally plant your weapon in ${outcome.targetName} for ${outcome.damage}.`,
-        `You begin a total miss, trip over your own clover charm, and still crack ${outcome.targetName} for ${outcome.damage}.`,
-        `A wildly unplanned stumble turns into a saint-touched wallop on ${outcome.targetName} for ${outcome.damage}.`,
+        `You slip on a lucky puddle and accidentally plant your weapon in ${outcome.targetName} for ${outcome.damage}. ${reaction}`,
+        `You begin a total miss, trip over your own clover charm, and still crack ${outcome.targetName} for ${outcome.damage}. ${reaction}`,
+        `A wildly unplanned stumble turns into a saint-touched wallop on ${outcome.targetName} for ${outcome.damage}. ${reaction}`,
       ]),
     };
   }
 
   return {
     ...outcome,
-    message: `You strike ${outcome.targetName} for ${outcome.damage}.`,
+    message: `You strike ${outcome.targetName} for ${outcome.damage}. ${reaction}`,
   };
 }
 
 export function decorateEnemyAttackOutcome(outcome, luck) {
   const seed = `enemy-hit:${outcome.attackerName}:${outcome.damage}`;
+  const banter = quoteFor(outcome.attackerName, ATTACK_QUOTES, "enemy-attack");
   if (shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
       message: pickVariant(seed, [
-        `${outcome.attackerName} pelts you with a shower of bad luck for ${outcome.damage}.`,
-        `${outcome.attackerName} bounces off a barrel, a wall, and your pride for ${outcome.damage}.`,
-        `${outcome.attackerName} catches you mid-flinch and charges ${outcome.damage} in bruises.`,
+        `${outcome.attackerName} pelts you with a shower of bad luck for ${outcome.damage}. ${banter}`,
+        `${outcome.attackerName} bounces off a barrel, a wall, and your pride for ${outcome.damage}. ${banter}`,
+        `${outcome.attackerName} catches you mid-flinch and charges ${outcome.damage} in bruises. ${banter}`,
       ]),
     };
   }
 
   return {
     ...outcome,
-    message: `${outcome.attackerName} hits you for ${outcome.damage}.`,
+    message: `${outcome.attackerName} hits you for ${outcome.damage}. ${banter}`,
   };
 }
 
 export function decorateEnemyDefeatOutcome(outcome, luck) {
   const seed = `enemy-defeat:${outcome.foeName}`;
+  const lastWords = quoteFor(outcome.foeName, DEFEAT_QUOTES, "defeat");
   if (shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
       message: pickVariant(seed, [
-        `${outcome.foeName} folds under a catastrophic shower of lucky nonsense.`,
-        `${outcome.foeName} goes down after the universe overcommits to your bit.`,
-        `${outcome.foeName} is defeated when fortune decides subtlety is overrated.`,
+        `${outcome.foeName} folds under a catastrophic shower of lucky nonsense. ${lastWords}`,
+        `${outcome.foeName} goes down after the universe overcommits to your bit. ${lastWords}`,
+        `${outcome.foeName} is defeated when fortune decides subtlety is overrated. ${lastWords}`,
       ]),
     };
   }
 
   return {
     ...outcome,
-    message: `${outcome.foeName} is defeated.`,
+    message: `${outcome.foeName} is defeated. ${lastWords}`,
   };
 }
 
@@ -113,15 +148,16 @@ export function decorateDeathOutcome(outcome, luck) {
 
 export function decorateMonsterEncounter(outcome, luck) {
   const seed = `monster:${outcome.monster.name}:${outcome.floor}:${outcome.rooms}`;
+  const greeting = quoteFor(outcome.monster.name, ENCOUNTER_QUOTES, "encounter");
   if (luck >= 8 && shouldGoAbsurd(luck, seed)) {
     return {
       ...outcome,
       encounterTitle: "Lucky Find!",
       displayName: outcome.monster.name,
       message: pickVariant(seed, [
-        `Lucky you. A clover-cursed champion erupts from the mist: ${outcome.monster.name}.`,
-        `You round a corner, trip over a rainbow root, and discover a "special guest" ${outcome.monster.name}.`,
-        `Fortune winks, the room groans, and ${outcome.monster.name} arrives like a rare tavern horror.`,
+        `Lucky you. A clover-cursed champion erupts from the mist: ${outcome.monster.name}. ${greeting}`,
+        `You round a corner, trip over a rainbow root, and discover a "special guest" ${outcome.monster.name}. ${greeting}`,
+        `Fortune winks, the room groans, and ${outcome.monster.name} arrives like a rare tavern horror. ${greeting}`,
       ]),
     };
   }
@@ -130,7 +166,7 @@ export function decorateMonsterEncounter(outcome, luck) {
     ...outcome,
     encounterTitle: "",
     displayName: outcome.monster.name,
-    message: `${outcome.monster.name} emerges from the dark.`,
+    message: `${outcome.monster.name} emerges from the dark. ${greeting}`,
   };
 }
 

@@ -28,6 +28,7 @@ import {
   spawnMonster,
   upgCost,
 } from "./utils/GameLogic.js";
+import { getDungeonCatalog, getNewlyDiscoveredDungeons } from "./utils/DungeonCatalog.js";
 import {
   decorateAttackOutcome,
   decorateDeathOutcome,
@@ -80,6 +81,7 @@ export default function Game() {
   const currentLuck = getCurrentLuck(p, inv);
   const luckyItemCount = getLuckyItemCount(inv);
   const luckTier = getLuckTier(currentLuck);
+  const dungeonCatalog = getDungeonCatalog(unlocked);
 
   const alog = useCallback((msg, type = "normal") => {
     setLog((current) => [...current.slice(-80), { msg, type, id: makeId("log") }]);
@@ -729,9 +731,15 @@ export default function Game() {
       return;
     }
 
+    const nextUnlocked = unlocked.includes(dungeon.id) ? unlocked : [...unlocked, dungeon.id].sort((a, b) => a - b);
+    const discoveries = getNewlyDiscoveredDungeons(unlocked, nextUnlocked);
+
     setP((prev) => ({ ...prev, gold: prev.gold - dungeon.cost }));
-    setUnlocked((current) => (current.includes(dungeon.id) ? current : [...current, dungeon.id]));
+    setUnlocked(nextUnlocked);
     alog(`The broker unlocks ${dungeon.name} and pretends not to know what lives there.`, "ok");
+    discoveries.forEach((discovery) => {
+      alog(`A fresh rumor surfaces: ${discovery.name}. The broker insists it was definitely there yesterday.`, "gold");
+    });
   };
 
   const restart = () => {
@@ -841,6 +849,7 @@ export default function Game() {
           )}
           {activeView === "pick" && (
             <PickDungeonView
+              dungeons={dungeonCatalog}
               unlocked={unlocked}
               goShop={goShop}
               startJourney={startJourney}
