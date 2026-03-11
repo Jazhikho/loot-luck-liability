@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ToastLayer } from "../components/ToastLayer.jsx";
 import { Btn } from "../components/Btn.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
+import { LocaleSelector } from "../components/LocaleSelector.jsx";
 import { getAchievementDefs } from "../data/Content.js";
 import { useI18n } from "../i18n/index.jsx";
 
@@ -59,9 +60,12 @@ export function ProfileScreen({
             </h1>
             <p className="text-xs text-emerald-100/70">{t("ui.profile.ledgerSubtitle")}</p>
           </div>
-          <Btn onClick={() => setView(prevView)} c="bg-slate-700 hover:bg-slate-600">
-            {t("ui.common.back")}
-          </Btn>
+          <div className="flex items-center gap-2">
+            <LocaleSelector compact />
+            <Btn onClick={() => setView(prevView)} c="bg-slate-700 hover:bg-slate-600">
+              {t("ui.common.back")}
+            </Btn>
+          </div>
         </div>
         <div className="flex gap-1">
           {[

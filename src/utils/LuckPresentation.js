@@ -3,6 +3,7 @@ import {
   getDialogueEntries,
   getDialogueLabel,
   getLootPrefixLabel,
+  getMonsterDialogueEntries,
   getNestedDialogueEntries,
 } from "../i18n/dialogueResources.js";
 
@@ -224,9 +225,14 @@ function pickTierText(category, tierKey, seed) {
   return pickVariant(seed, getDialogueEntries(getLocale(), category, tierKey, DIALOGUE_LIBRARY));
 }
 
-function quoteFor(category, name, salt, luck) {
+function pickMonsterTierText(category, monsterId, tierKey, seed) {
+  const fallbackEntries = getDialogueEntries(getLocale(), category, tierKey, DIALOGUE_LIBRARY);
+  return pickVariant(seed, getMonsterDialogueEntries(getLocale(), monsterId, category, tierKey, fallbackEntries));
+}
+
+function quoteFor(category, monsterId, name, salt, luck) {
   const tierKey = getTierKey(luck);
-  return `"${pickTierText(category, tierKey, `${salt}:${name}:${tierKey}`)}"`;
+  return `"${pickMonsterTierText(category, monsterId, tierKey, `${salt}:${monsterId || name}:${tierKey}`)}"`;
 }
 
 function shouldGoAbsurd(luck, seed) {
@@ -591,9 +597,9 @@ Object.assign(DIALOGUE_LIBRARY, {
 
 export function decorateAttackOutcome(outcome, luck) {
   const tierKey = getTierKey(luck);
-  const seed = `attack:${outcome.targetName}:${outcome.damage}:${outcome.highRoll}:${tierKey}`;
+  const seed = `attack:${outcome.targetId || outcome.targetName}:${outcome.damage}:${outcome.highRoll}:${tierKey}`;
   const effectiveTier = outcome.highRoll && shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
-  const quote = quoteFor("hurtQuote", outcome.targetName, "hurt", luck);
+  const quote = quoteFor("hurtQuote", outcome.targetId, outcome.targetName, "hurt", luck);
   const template = pickTierText("attackNarration", effectiveTier, seed);
   return {
     ...outcome,
@@ -603,9 +609,9 @@ export function decorateAttackOutcome(outcome, luck) {
 
 export function decorateEnemyAttackOutcome(outcome, luck) {
   const tierKey = getTierKey(luck);
-  const seed = `enemy-hit:${outcome.attackerName}:${outcome.damage}:${tierKey}`;
+  const seed = `enemy-hit:${outcome.attackerId || outcome.attackerName}:${outcome.damage}:${tierKey}`;
   const template = pickTierText("enemyAttackNarration", tierKey, seed);
-  const quote = quoteFor("enemyAttackQuote", outcome.attackerName, "enemy-attack", luck);
+  const quote = quoteFor("enemyAttackQuote", outcome.attackerId, outcome.attackerName, "enemy-attack", luck);
   return {
     ...outcome,
     message: formatTemplate(template, { attacker: outcome.attackerName, damage: outcome.damage, quote }),
@@ -614,9 +620,9 @@ export function decorateEnemyAttackOutcome(outcome, luck) {
 
 export function decorateEnemyDefeatOutcome(outcome, luck) {
   const tierKey = getTierKey(luck);
-  const seed = `enemy-defeat:${outcome.foeName}:${tierKey}`;
+  const seed = `enemy-defeat:${outcome.foeId || outcome.foeName}:${tierKey}`;
   const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
-  const quote = quoteFor("defeatQuote", outcome.foeName, "defeat", luck);
+  const quote = quoteFor("defeatQuote", outcome.foeId, outcome.foeName, "defeat", luck);
   const template = pickTierText("defeatNarration", effectiveTier, seed);
   return {
     ...outcome,
@@ -643,8 +649,8 @@ export function decorateDeathOutcome(outcome, luck) {
 
 export function decorateMonsterEncounter(outcome, luck) {
   const tierKey = getTierKey(luck);
-  const seed = `monster:${outcome.monster.name}:${outcome.floor}:${outcome.rooms}:${tierKey}`;
-  const quote = quoteFor("encounterQuote", outcome.monster.name, "encounter", luck);
+  const seed = `monster:${outcome.monster.id || outcome.monster.name}:${outcome.floor}:${outcome.rooms}:${tierKey}`;
+  const quote = quoteFor("encounterQuote", outcome.monster.id, outcome.monster.name, "encounter", luck);
   return {
     ...outcome,
     encounterTitle: luck >= 8 && shouldGoAbsurd(luck, seed) ? getDialogueLabel(getLocale(), "luckyFindTitle", "Lucky Find!") : "",

@@ -10,7 +10,15 @@ import { ShopView } from "./screens/ShopView.jsx";
 import { PickDungeonView } from "./screens/PickDungeonView.jsx";
 import { CombatView } from "./screens/CombatView.jsx";
 import { FloorHubView } from "./screens/FloorHubView.jsx";
-import { getAchievementDefs, getEmptyRooms, getExploreFlavor, getGreetingLines, getSellQuotes } from "./data/Content.js";
+import {
+  getAchievementDefs,
+  getEmptyRooms,
+  getExploreFlavor,
+  getGreetingLines,
+  getLootName,
+  getMonsterName,
+  getSellQuotes,
+} from "./data/Content.js";
 import { DEF_LT, DEF_P, DEF_RS } from "./data/Defaults.js";
 import { useI18n } from "./i18n/index.jsx";
 import {
@@ -53,14 +61,19 @@ function getAfterFightCompletion(afterFight) {
   return typeof afterFight === "object" && afterFight !== null && afterFight.completedDungeon === true;
 }
 
+function getAfterFightForcedEntry(afterFight) {
+  return typeof afterFight === "object" && afterFight !== null && afterFight.forcedEntry === true;
+}
+
 export default function Game() {
-  const { t } = useI18n();
+  const { t, locale, localeSource } = useI18n();
   const [view, setView] = useState("title");
   const [p, setP] = useState(DEF_P);
   const [inv, setInv] = useState([]);
   const [dng, setDng] = useState(null);
   const [fl, setFl] = useState(0);
   const [rooms, setRooms] = useState(0);
+  const [enteredFloors, setEnteredFloors] = useState([]);
   const [foe, setFoe] = useState(null);
   const [log, setLog] = useState([]);
   const [afterFight, setAfterFight] = useState(null);
@@ -97,6 +110,7 @@ export default function Game() {
   const armorBonus = getArmorUpgradeBenefit();
   const storyEntries = log.slice(-4);
   const latestStory = storyEntries.at(-1) || null;
+  const localizeDangerLabel = useCallback((danger) => t(`ui.danger.${danger.key}`) || danger.label, [t]);
 
   const clearPendingDeath = useCallback(() => {
     if (deathTimerRef.current) {
@@ -152,13 +166,13 @@ export default function Game() {
       setLog((current) => [
         ...current.slice(-80),
         {
-          msg: `Achievement unlocked: ${definition.e} ${definition.name}!`,
+          msg: t("ui.gameLog.achievementUnlocked", { emoji: definition.e, name: definition.name }),
           type: "gold",
           id: makeId("log"),
         },
       ]);
     },
-    [addToast]
+    [addToast, t]
   );
 
   const loadSaveIntoState = useCallback((save) => {
@@ -169,6 +183,7 @@ export default function Game() {
     setDng(save.dng || null);
     setFl(save.fl || 0);
     setRooms(save.rooms || 0);
+    setEnteredFloors(save.ef || []);
     setFoe(save.foe || null);
     setAfterFight(save.af || null);
     setUnlocked(save.unlocked || [1, 2]);
@@ -206,6 +221,31 @@ export default function Game() {
   }, [loadSaveIntoState]);
 
   useEffect(() => {
+    setInv((current) =>
+      current.map((item) => ({
+        ...item,
+        name: getLootName(item.sourceId, item.name),
+      }))
+    );
+    setFoe((current) =>
+      current
+        ? {
+            ...current,
+            name: getMonsterName(current.id, current.name),
+            displayName: getMonsterName(current.id, current.displayName || current.name),
+          }
+        : current
+    );
+    setDng((current) => {
+      if (!current) return current;
+      return getDungeonCatalog(unlocked).find((dungeon) => dungeon.id === current.id) || current;
+    });
+    if (view === "shop") {
+      setMQuote((current) => (greetings.includes(current) ? current : pick(greetings)));
+    }
+  }, [greetings, unlocked, view, locale]);
+
+  useEffect(() => {
     if (!loaded.current) return;
 
     const safeView =
@@ -225,13 +265,14 @@ export default function Game() {
       dng,
       fl,
       rooms,
+      ef: enteredFloors,
       foe: saveView === "combat" ? foe : null,
       af: saveView === "combat" ? afterFight : null,
       unlocked,
       rs,
       log: log.slice(-40),
     });
-  }, [view, p, inv, dng, fl, rooms, foe, afterFight, unlocked, rs, log, prevView]);
+  }, [view, p, inv, dng, fl, rooms, enteredFloors, foe, afterFight, unlocked, rs, log, prevView]);
 
   useEffect(() => {
     if (!loaded.current) return;
@@ -273,6 +314,7 @@ export default function Game() {
           : null,
         foe: foe
           ? {
+              id: foe.id || null,
               name: foe.name,
               displayName: foe.displayName || foe.name,
               title: foe.encounterTitle || "",
@@ -282,11 +324,15 @@ export default function Game() {
               def: foe.def,
             }
           : null,
+        locale,
+        localeSource,
         story: {
           latest: latestStory?.msg || "",
           recent: storyEntries.map((entry) => entry.msg),
         },
         departureWarningOpen,
+        forcedEntryActive: getAfterFightForcedEntry(afterFight),
+        enteredFloors,
         runStats: rs,
       });
     window.advanceTime = () => {};
@@ -295,7 +341,7 @@ export default function Game() {
       delete window.render_game_to_text;
       delete window.advanceTime;
     };
-  }, [view, p, inv, dng, fl, rooms, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier, log, departureWarningOpen]);
+  }, [view, p, inv, dng, fl, rooms, enteredFloors, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier, log, departureWarningOpen, locale, localeSource, afterFight]);
 
   const recordHs = useCallback(() => {
     const entry = {
@@ -350,6 +396,7 @@ export default function Game() {
     setDng(null);
     setFl(0);
     setRooms(0);
+    setEnteredFloors([]);
     setFoe(null);
     setAfterFight(null);
   }, [clearPendingDeath, greetings]);
@@ -368,6 +415,7 @@ export default function Game() {
     setDng(null);
     setFl(0);
     setRooms(0);
+    setEnteredFloors([]);
     setFoe(null);
     setAfterFight(null);
     setLog([]);
@@ -389,10 +437,11 @@ export default function Game() {
     setInv((current) => current.filter((item) => item.locked));
     updRs({ earned: rsRef.current.earned + total });
     updLt({ gold: newLifetimeGold });
-    alog(
-      `You cash in ${sellableItems.length} curios for ${total} gold.${heldCount > 0 ? ` ${heldCount} held item${heldCount === 1 ? "" : "s"} stay tucked away.` : ""} ${pick(sellQuotes)}`,
-      "gold"
-    );
+    const heldText =
+      heldCount > 0
+        ? t(heldCount === 1 ? "ui.gameLog.cashInHeldOne" : "ui.gameLog.cashInHeldMany", { count: heldCount })
+        : "";
+    alog(t("ui.gameLog.cashIn", { count: sellableItems.length, gold: total, heldText, quote: pick(sellQuotes) }), "gold");
 
     if (newGold >= 500) tryUnlock("deep_pockets");
     if (newLifetimeGold >= 1000) tryUnlock("big_earner");
@@ -410,7 +459,7 @@ export default function Game() {
     setInv((current) => current.filter((entry) => entry.id !== id));
     updRs({ earned: rsRef.current.earned + item.value });
     updLt({ gold: newLifetimeGold });
-    alog(`You sell ${item.name} for ${item.value} gold.`, "gold");
+    alog(t("ui.gameLog.sellOne", { item: item.name, gold: item.value }), "gold");
 
     if (newGold >= 500) tryUnlock("deep_pockets");
     if (newLifetimeGold >= 1000) tryUnlock("big_earner");
@@ -426,20 +475,20 @@ export default function Game() {
   const upgWeapon = () => {
     const cost = upgCost(p.wlv);
     if (p.gold < cost) {
-      alog(`Need ${cost}g to sharpen your gear.`, "warn");
+      alog(t("ui.gameLog.needWeaponUpgrade", { gold: cost }), "warn");
       return;
     }
 
     const nextLevel = p.wlv + 1;
     setP((prev) => ({ ...prev, gold: prev.gold - cost, wlv: nextLevel, atk: prev.atk + weaponBonus.atk }));
-    alog(`Your weapon is blessed up to level ${nextLevel}. Attack +${weaponBonus.atk}.`, "ok");
+    alog(t("ui.gameLog.weaponUpgraded", { level: nextLevel, atk: weaponBonus.atk }), "ok");
     if (nextLevel >= 5) tryUnlock("upgraded");
   };
 
   const upgArmor = () => {
     const cost = upgCost(p.alv);
     if (p.gold < cost) {
-      alog(`Need ${cost}g to reinforce your coat.`, "warn");
+      alog(t("ui.gameLog.needArmorUpgrade", { gold: cost }), "warn");
       return;
     }
 
@@ -452,14 +501,14 @@ export default function Game() {
       mhp: prev.mhp + armorBonus.hp,
       hp: Math.min(prev.hp + armorBonus.hp, prev.mhp + armorBonus.hp),
     }));
-    alog(`Your armor is lined with lucky iron. Defense +${armorBonus.def}, Max HP +${armorBonus.hp}.`, "ok");
+    alog(t("ui.gameLog.armorUpgraded", { def: armorBonus.def, hp: armorBonus.hp }), "ok");
     if (nextLevel >= 5) tryUnlock("upgraded");
   };
 
   const upgLuck = () => {
     const cost = getLuckUpgradeCost(p.luck);
     if (p.gold < cost) {
-      alog(`Need ${cost}g to bribe fortune.`, "warn");
+      alog(t("ui.gameLog.needLuckUpgrade", { gold: cost }), "warn");
       return;
     }
 
@@ -468,29 +517,29 @@ export default function Game() {
       gold: prev.gold - cost,
       luck: prev.luck + 1,
     }));
-    alog(`The broker pockets ${cost}g and nudges your luck upward. Base Luck +1.`, "ok");
+    alog(t("ui.gameLog.luckUpgraded", { gold: cost }), "ok");
   };
 
   const buyPot = () => {
     if (p.gold < 15) {
-      alog("Need 15g for a tonic bottle.", "warn");
+      alog(t("ui.gameLog.needPotion"), "warn");
       return;
     }
     setP((prev) => ({ ...prev, gold: prev.gold - 15, pot: prev.pot + 1 }));
-    alog("You buy a green glass tonic for the road.", "ok");
+    alog(t("ui.gameLog.boughtPotion"), "ok");
   };
 
   const restInn = () => {
     if (p.hp >= p.mhp) {
-      alog("You already look as alive as you're going to get.", "warn");
+      alog(t("ui.gameLog.alreadyHealed"), "warn");
       return;
     }
     if (p.gold < 10) {
-      alog("Need 10g for a booth, a blanket, and a hot stew.", "warn");
+      alog(t("ui.gameLog.needRest"), "warn");
       return;
     }
     setP((prev) => ({ ...prev, gold: prev.gold - 10, hp: prev.mhp }));
-    alog("You recover beside a warm hearth and a suspiciously helpful fiddle tune.", "ok");
+    alog(t("ui.gameLog.rested"), "ok");
   };
 
   const travelEvent = (direction, dungeonData, options = {}) => {
@@ -499,9 +548,11 @@ export default function Game() {
 
     if (roll < 30) {
       const tier = dungeonData.tier;
+      const tollGoblinName = getMonsterName("roadside_toll_goblin", "Roadside Toll Goblin");
       const tollGoblin = {
-        name: "Roadside Toll Goblin",
-        displayName: "Roadside Toll Goblin",
+        id: "roadside_toll_goblin",
+        name: tollGoblinName,
+        displayName: tollGoblinName,
         encounterTitle: "",
         emoji: "🍀",
         hp: 12 + tier * 6,
@@ -516,7 +567,11 @@ export default function Game() {
         displayName: encounter.displayName,
         encounterTitle: encounter.encounterTitle,
       });
-      setAfterFight(direction === "to" ? { type: "enterDungeon" } : { type: "goShop", completedDungeon });
+      setAfterFight(
+        direction === "to"
+          ? { type: "enterDungeon", forcedEntry: false }
+          : { type: "goShop", completedDungeon, forcedEntry: false }
+      );
       setView("combat");
       return true;
     }
@@ -547,39 +602,112 @@ export default function Game() {
     return false;
   };
 
+  const resolveRoom = useCallback(
+    ({ dungeon, floor, roomNumber, forceEntry = false }) => {
+      if (!dungeon) return;
+
+      setRooms(roomNumber);
+      updRs({ rooms: rsRef.current.rooms + 1 });
+      updLt({ rooms: ltRef.current.rooms + 1 });
+
+      if (roomNumber >= 8) tryUnlock("thorough");
+      alog(t("ui.gameLog.roomEntry", { room: roomNumber, flavor: pick(exploreFlavor) }), "dim");
+
+      const monsterChance = 40 + roomNumber * 4 + floor * 2;
+      const lootChance = 30 - roomNumber * 1.5;
+      const trapChance = 8 + roomNumber * 2 + dungeon.tier * 2;
+      const roll = Math.random() * 100;
+
+      if (roll < monsterChance) {
+        const monster = spawnMonster(floor, dungeon.tier, roomNumber);
+        const encounter = decorateMonsterEncounter({ monster, floor, rooms: roomNumber }, currentLuck);
+        alog(encounter.message, "bad");
+        setFoe({
+          ...monster,
+          displayName: encounter.displayName,
+          encounterTitle: encounter.encounterTitle,
+        });
+        setAfterFight({ type: "floorHub", forcedEntry: forceEntry });
+        setView("combat");
+        return;
+      }
+
+      if (roll < monsterChance + lootChance) {
+        const loot = rollLoot(floor, dungeon.tier, roomNumber);
+        const decoratedLoot = decorateLootOutcome({ item: loot, source: "room" }, currentLuck);
+        alog(decoratedLoot.message, "ok");
+        setInv((current) => {
+          const next = [...current, loot];
+          if (next.length >= 10) tryUnlock("hoarder");
+          return next;
+        });
+        updLt({ items: ltRef.current.items + 1 });
+        if (loot.rarity === "legendary") tryUnlock("legendary");
+        setView("floorHub");
+        return;
+      }
+
+      if (roll < monsterChance + lootChance + trapChance) {
+        const damage = rand(3 + floor, 6 + dungeon.tier * 2 + floor + Math.floor(roomNumber / 2));
+        const nextHp = Math.max(0, p.hp - damage);
+        const trap = decorateTrapOutcome({ damage, fatal: nextHp <= 0 }, currentLuck);
+        setP((prev) => ({ ...prev, hp: nextHp }));
+        alog(trap.message, "bad");
+        if (nextHp <= 0) {
+          const death = decorateDeathOutcome({ cause: "trap" }, currentLuck);
+          alog(death.message, "bad");
+          queueDeath(t("ui.gameLog.trapDeathPending"));
+          return;
+        }
+        setView("floorHub");
+        return;
+      }
+
+      const empty = decorateEmptyRoomOutcome({ baseText: pick(emptyRooms) }, currentLuck);
+      alog(empty.message, "info");
+      setView("floorHub");
+    },
+    [alog, currentLuck, emptyRooms, exploreFlavor, p.hp, queueDeath, t, tryUnlock, updLt, updRs]
+  );
+
   const startJourney = (dungeonData) => {
     setDepartureWarningOpen(false);
     setDng(dungeonData);
     setFl(0);
     setRooms(0);
+    setEnteredFloors([]);
     setAfterFight(null);
-    alog(`You set out beneath a green moon for ${dungeonData.name}.`, "info");
+    alog(t("ui.gameLog.journeyStart", { dungeon: dungeonData.name }), "info");
     if (!travelEvent("to", dungeonData)) enterFloor(1, dungeonData);
   };
 
   const arriveShop = (fromHp, completedDungeon = false) => {
     if (completedDungeon) awardDungeonClear();
     if (fromHp <= 5) tryUnlock("close_call");
-    alog("You stagger back to the broker's snug with your haul intact.", "info");
+    alog(t("ui.gameLog.returnToSnug"), "info");
     goShop();
   };
 
   const startRetreat = (dungeonData) => {
     const activeDungeon = dungeonData || dng;
     const completedDungeon = didReturnFromClearedDungeon(fl, activeDungeon);
-    alog("You cut your losses and head for the lanterns of town.", "info");
+    alog(t("ui.gameLog.retreatStart"), "info");
     if (!travelEvent("back", activeDungeon, { completedDungeon })) arriveShop(p.hp, completedDungeon);
   };
 
   const enterFloor = (floorNum, dungeonData) => {
     const dungeon = dungeonData || dng;
     if (!dungeon) return;
+    const firstEntry = !enteredFloors.includes(floorNum);
 
     setFl(floorNum);
     setDng(dungeon);
     setRooms(0);
     setFoe(null);
     setAfterFight(null);
+    if (firstEntry) {
+      setEnteredFloors((current) => [...new Set([...current, floorNum])].sort((a, b) => a - b));
+    }
 
     const newDeepest = Math.max(rsRef.current.deepest, floorNum);
     updRs({ deepest: newDeepest });
@@ -589,71 +717,18 @@ export default function Game() {
     if (floorNum >= 8) tryUnlock("abyss");
 
     alog("--------------------------------", "dim");
-    alog(`${dungeon.name} - Floor ${floorNum}/${dungeon.floors}`, "info");
-    alog(`The omens read ${getDanger(floorNum, dungeon.tier, 0).label.toLowerCase()}.`, "dim");
+    alog(t("ui.gameLog.floorArrival", { dungeon: dungeon.name, floor: floorNum, total: dungeon.floors }), "info");
+    alog(t("ui.gameLog.omens", { danger: localizeDangerLabel(getDanger(floorNum, dungeon.tier, 0)).toLowerCase() }), "dim");
+    if (firstEntry) {
+      resolveRoom({ dungeon, floor: floorNum, roomNumber: 1, forceEntry: true });
+      return;
+    }
     setView("floorHub");
   };
 
   const exploreRoom = () => {
     if (!dng) return;
-
-    const nextRooms = rooms + 1;
-    setRooms(nextRooms);
-    updRs({ rooms: rsRef.current.rooms + 1 });
-    updLt({ rooms: ltRef.current.rooms + 1 });
-
-    if (nextRooms >= 8) tryUnlock("thorough");
-    alog(`[Room ${nextRooms}] ${pick(exploreFlavor)}`, "dim");
-
-    const monsterChance = 40 + nextRooms * 4 + fl * 2;
-    const lootChance = 30 - nextRooms * 1.5;
-    const trapChance = 8 + nextRooms * 2 + dng.tier * 2;
-    const roll = Math.random() * 100;
-
-    if (roll < monsterChance) {
-      const monster = spawnMonster(fl, dng.tier, nextRooms);
-      const encounter = decorateMonsterEncounter({ monster, floor: fl, rooms: nextRooms }, currentLuck);
-      alog(encounter.message, "bad");
-      setFoe({
-        ...monster,
-        displayName: encounter.displayName,
-        encounterTitle: encounter.encounterTitle,
-      });
-      setAfterFight({ type: "floorHub" });
-      setView("combat");
-      return;
-    }
-
-    if (roll < monsterChance + lootChance) {
-      const loot = rollLoot(fl, dng.tier, nextRooms);
-      const decoratedLoot = decorateLootOutcome({ item: loot, source: "room" }, currentLuck);
-      alog(decoratedLoot.message, "ok");
-      setInv((current) => {
-        const next = [...current, loot];
-        if (next.length >= 10) tryUnlock("hoarder");
-        return next;
-      });
-      updLt({ items: ltRef.current.items + 1 });
-      if (loot.rarity === "legendary") tryUnlock("legendary");
-      return;
-    }
-
-    if (roll < monsterChance + lootChance + trapChance) {
-      const damage = rand(3 + fl, 6 + dng.tier * 2 + fl + Math.floor(nextRooms / 2));
-      const nextHp = Math.max(0, p.hp - damage);
-      const trap = decorateTrapOutcome({ damage, fatal: nextHp <= 0 }, currentLuck);
-      setP((prev) => ({ ...prev, hp: nextHp }));
-      alog(trap.message, "bad");
-      if (nextHp <= 0) {
-        const death = decorateDeathOutcome({ cause: "trap" }, currentLuck);
-        alog(death.message, "bad");
-        queueDeath("Luck buckles. The room goes cold around you.");
-      }
-      return;
-    }
-
-    const empty = decorateEmptyRoomOutcome({ baseText: pick(emptyRooms) }, currentLuck);
-    alog(empty.message, "info");
+    resolveRoom({ dungeon: dng, floor: fl, roomNumber: rooms + 1, forceEntry: false });
   };
 
   const handleKill = () => {
@@ -672,7 +747,7 @@ export default function Game() {
     const playerDamage = Math.max(1, p.atk - foe.def + attackBonus);
     const foeHp = foe.hp - playerDamage;
     const attack = decorateAttackOutcome(
-      { targetName: foe.displayName || foe.name, damage: playerDamage, highRoll: attackBonus === 2 },
+      { targetId: foe.id, targetName: foe.displayName || foe.name, damage: playerDamage, highRoll: attackBonus === 2 },
       currentLuck
     );
     alog(attack.message, "hit");
@@ -680,7 +755,7 @@ export default function Game() {
     if (foeHp <= 0) {
       const nextAfterFight = getAfterFightType(afterFight);
       const completedDungeon = getAfterFightCompletion(afterFight);
-      const defeat = decorateEnemyDefeatOutcome({ foeName: foe.displayName || foe.name }, currentLuck);
+      const defeat = decorateEnemyDefeatOutcome({ foeId: foe.id, foeName: foe.displayName || foe.name }, currentLuck);
       alog(defeat.message, "ok");
       handleKill();
 
@@ -715,7 +790,7 @@ export default function Game() {
     const enemyDamage = Math.max(1, foe.atk - p.def + rand(-1, 2));
     const nextPlayerHp = p.hp - enemyDamage;
     const enemyAttack = decorateEnemyAttackOutcome(
-      { attackerName: foe.displayName || foe.name, damage: enemyDamage },
+      { attackerId: foe.id, attackerName: foe.displayName || foe.name, damage: enemyDamage },
       currentLuck
     );
     alog(enemyAttack.message, "bad");
@@ -724,7 +799,7 @@ export default function Game() {
       setP((prev) => ({ ...prev, hp: 0 }));
       const death = decorateDeathOutcome({ cause: "combat", foeName: foe.displayName || foe.name }, currentLuck);
       alog(death.message, "bad");
-      queueDeath("Luck blinks. You're about to be carried out of this mess.");
+      queueDeath(t("ui.gameLog.combatDeathPending"));
       return;
     }
 
@@ -733,18 +808,18 @@ export default function Game() {
 
   const usePot = () => {
     if (p.pot <= 0) {
-      alog("No tonic bottles left.", "warn");
+      alog(t("ui.gameLog.noPotions"), "warn");
       return;
     }
     if (!canUsePotion(p)) {
-      alog("You're already running at full mischief.", "warn");
+      alog(t("ui.gameLog.potionFull"), "warn");
       return;
     }
 
     const heal = Math.min(25, p.mhp - p.hp);
     setP((prev) => ({ ...prev, hp: Math.min(prev.mhp, prev.hp + heal), pot: prev.pot - 1 }));
     updLt({ potions: ltRef.current.potions + 1 });
-    alog(`You knock back a tonic and recover ${heal} HP.`, "ok");
+    alog(t("ui.gameLog.potionUsed", { heal }), "ok");
   };
 
   const doFlee = () => {
@@ -753,7 +828,7 @@ export default function Game() {
     if (Math.random() < 0.55) {
       const nextAfterFight = getAfterFightType(afterFight);
       const completedDungeon = getAfterFightCompletion(afterFight);
-      alog("You bolt while fortune argues with itself behind you.", "info");
+      alog(t("ui.gameLog.fleeSuccess"), "info");
       setFoe(null);
       setAfterFight(null);
 
@@ -769,16 +844,16 @@ export default function Game() {
 
     const enemyDamage = Math.max(1, foe.atk - p.def + rand(0, 2));
     const enemyAttack = decorateEnemyAttackOutcome(
-      { attackerName: foe.displayName || foe.name, damage: enemyDamage },
+      { attackerId: foe.id, attackerName: foe.displayName || foe.name, damage: enemyDamage },
       currentLuck
     );
-    alog(`Your escape fails. ${enemyAttack.message}`, "bad");
+    alog(t("ui.gameLog.fleeFailed", { attack: enemyAttack.message }), "bad");
 
     if (p.hp - enemyDamage <= 0) {
       setP((prev) => ({ ...prev, hp: 0 }));
       const death = decorateDeathOutcome({ cause: "flee", foeName: foe.displayName || foe.name }, currentLuck);
       alog(death.message, "bad");
-      queueDeath("The escape goes sideways. This is where the run folds.");
+      queueDeath(t("ui.gameLog.fleeDeathPending"));
       return;
     }
 
@@ -787,7 +862,7 @@ export default function Game() {
 
   const unlockDungeon = (dungeon) => {
     if (p.gold < dungeon.cost) {
-      alog(`Need ${dungeon.cost}g to buy a whisper-map for this place.`, "warn");
+      alog(t("ui.gameLog.needWhisperMap", { gold: dungeon.cost }), "warn");
       return;
     }
 
@@ -796,9 +871,9 @@ export default function Game() {
 
     setP((prev) => ({ ...prev, gold: prev.gold - dungeon.cost }));
     setUnlocked(nextUnlocked);
-    alog(`The broker unlocks ${dungeon.name} and pretends not to know what lives there.`, "ok");
+    alog(t("ui.gameLog.unlockDungeon", { dungeon: dungeon.name }), "ok");
     discoveries.forEach((discovery) => {
-      alog(`A fresh rumor surfaces: ${discovery.name}. The broker insists it was definitely there yesterday.`, "gold");
+      alog(t("ui.gameLog.newRumor", { dungeon: discovery.name }), "gold");
     });
   };
 
@@ -806,14 +881,14 @@ export default function Game() {
     resetRun();
     updLt({ runs: ltRef.current.runs + 1 });
     goShop();
-    alog("You dust yourself off and chase the next lucky mistake.", "info");
+    alog(t("ui.gameLog.restart"), "info");
   };
 
   const newGame = () => {
     resetRun();
     updLt({ runs: ltRef.current.runs + 1 });
     goShop();
-    alog("You arrive at the broker's snug with empty pockets and dangerous optimism.", "info");
+    alog(t("ui.gameLog.newGame"), "info");
   };
 
   const nukeData = () => {

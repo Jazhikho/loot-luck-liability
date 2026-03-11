@@ -26,11 +26,17 @@ export function getEmptyRooms() {
 }
 
 export function getLootName(id, fallback = "") {
-  return t(`content.loot.${id}.name`) || fallback;
+  if (!id) return fallback;
+  const key = `content.loot.${id}.name`;
+  const value = t(key);
+  return value === key ? fallback : value;
 }
 
 export function getMonsterName(id, fallback = "") {
-  return t(`content.monsters.${id}.name`) || fallback;
+  if (!id) return fallback;
+  const key = `content.monsters.${id}.name`;
+  const value = t(key);
+  return value === key ? fallback : value;
 }
 
 export function localizeDungeon(dungeon) {

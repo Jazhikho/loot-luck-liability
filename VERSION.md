@@ -1,5 +1,11 @@
 # Version History
 
+## 1.7.0 - 2026-03-11
+
+- Added browser-aware English/Spanish language support with a visible manual override on the title screen and ledger.
+- Reworked combat and floor layouts so the story panel scrolls internally while the action buttons stay pinned in view.
+- Expanded the luck banter into monster-specific dialogue pools, forced a first-room resolution on first floor entry, and localized the main run/shop log text.
+
 ## 1.6.0 - 2026-03-11
 
 - Added a hidden localization scaffold for `en`, `es`, `ru`, `ja`, `ko`, and `zh-Hans` while keeping English as the only visible in-game language.

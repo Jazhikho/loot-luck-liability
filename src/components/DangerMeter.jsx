@@ -8,6 +8,7 @@ import { useI18n } from "../i18n/index.jsx";
 export function DangerMeter({ floor, tier, roomCount }) {
   const { t } = useI18n();
   const d = getDanger(floor, tier, roomCount);
+  const label = t(`ui.danger.${d.key}`) || d.label;
 
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -24,7 +25,7 @@ export function DangerMeter({ floor, tier, roomCount }) {
           return <div key={index} className={`h-3 w-2 rounded-sm ${barColor}`} />;
         })}
       </div>
-      <span className={d.color}>{d.label}</span>
+      <span className={d.color}>{label}</span>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { DEF_P, DEF_RS } from "../data/Defaults.js";
 import { makeId } from "./Helpers.js";
 import { getDungeonCatalog, isKnownDungeonId } from "./DungeonCatalog.js";
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 5;
 
 const RUN_VIEWS = new Set(["shop", "pick", "combat", "floorHub"]);
 const ITEM_RARITIES = new Set(["common", "uncommon", "rare", "legendary"]);
@@ -43,6 +43,7 @@ function sanitizeInventory(raw) {
     .filter((item) => isRecord(item) && typeof item.name === "string" && ITEM_RARITIES.has(item.rarity))
     .map((item, index) => ({
       id: typeof item.id === "string" || Number.isFinite(item.id) ? item.id : makeId(`item-${index}`),
+      sourceId: typeof item.sourceId === "string" ? item.sourceId : null,
       name: item.name,
       value: toFiniteInt(item.value, 0, 0),
       emoji: typeof item.emoji === "string" ? item.emoji : "📦",
@@ -61,6 +62,7 @@ function sanitizeFoe(raw) {
   if (!isRecord(raw) || typeof raw.name !== "string") return null;
   const maxHp = toFiniteInt(raw.maxHp, 1, 1);
   return {
+    id: typeof raw.id === "string" ? raw.id : null,
     name: raw.name,
     displayName: typeof raw.displayName === "string" ? raw.displayName : raw.name,
     encounterTitle: typeof raw.encounterTitle === "string" ? raw.encounterTitle : "",
@@ -76,16 +78,24 @@ function sanitizeAfterFight(raw, dungeon, floor) {
   if (typeof raw === "string") {
     if (!AFTER_FIGHT_TYPES.has(raw)) return null;
     return raw === "goShop"
-      ? { type: raw, completedDungeon: Boolean(dungeon && floor >= dungeon.floors) }
-      : { type: raw };
+      ? { type: raw, completedDungeon: Boolean(dungeon && floor >= dungeon.floors), forcedEntry: false }
+      : { type: raw, forcedEntry: false };
   }
   if (!isRecord(raw) || !AFTER_FIGHT_TYPES.has(raw.type)) return null;
   return raw.type === "goShop"
     ? {
         type: "goShop",
         completedDungeon: Boolean(raw.completedDungeon) || Boolean(dungeon && floor >= dungeon.floors),
+        forcedEntry: Boolean(raw.forcedEntry),
       }
-    : { type: raw.type };
+    : { type: raw.type, forcedEntry: Boolean(raw.forcedEntry) };
+}
+
+function sanitizeEnteredFloors(raw, dungeon) {
+  if (!dungeon || !Array.isArray(raw)) return [];
+  return [...new Set(raw.map((value) => toFiniteInt(value, 0, 0, dungeon.floors)).filter((value) => value > 0))].sort(
+    (a, b) => a - b
+  );
 }
 
 function sanitizeUnlocked(raw) {
@@ -138,13 +148,14 @@ export function normalizeSave(raw) {
     inv: sanitizeInventory(raw.inv),
     dng: dungeon,
     fl: floor,
-      rooms: toFiniteInt(raw.rooms, 0, 0),
-      foe,
-      af: sanitizeAfterFight(raw.af, dungeon, floor),
-      unlocked,
-      rs: sanitizeRunStats(raw.rs),
-      log: sanitizeLog(raw.log),
-    };
+    rooms: toFiniteInt(raw.rooms, 0, 0),
+    foe,
+    af: sanitizeAfterFight(raw.af, dungeon, floor),
+    ef: sanitizeEnteredFloors(raw.ef, dungeon),
+    unlocked,
+    rs: sanitizeRunStats(raw.rs),
+    log: sanitizeLog(raw.log),
+  };
 
   if (normalized.view === "combat" && !normalized.foe) normalized.view = dungeon ? "floorHub" : "shop";
   if (normalized.view === "floorHub" && !normalized.dng) normalized.view = "shop";
@@ -155,6 +166,7 @@ export function normalizeSave(raw) {
     normalized.rooms = 0;
     normalized.foe = null;
     normalized.af = null;
+    normalized.ef = [];
   }
 
   if (normalized.view !== "combat") {

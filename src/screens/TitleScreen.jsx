@@ -2,6 +2,7 @@ import { useState } from "react";
 import packageInfo from "../../package.json";
 import { ToastLayer } from "../components/ToastLayer.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
+import { LocaleSelector } from "../components/LocaleSelector.jsx";
 import { useI18n } from "../i18n/index.jsx";
 import { LS } from "../utils/Helpers.js";
 
@@ -41,6 +42,7 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
       <div className="max-w-lg rounded-2xl border border-emerald-400/20 bg-slate-900/80 p-8 text-center shadow-[0_0_60px_rgba(16,185,129,0.08)]">
         {showCredits ? (
           <div className="space-y-4 text-left">
+            <LocaleSelector compact />
             <div className="text-center">
               <div className="mb-4 text-7xl">🍀</div>
               <h1 className="mb-1 bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
@@ -81,6 +83,9 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
           </div>
         ) : (
           <>
+            <div className="mb-4 flex justify-end">
+              <LocaleSelector compact />
+            </div>
             <div className="mb-4 text-7xl">🍀</div>
             <h1 className="mb-1 bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
               {t("content.title")}

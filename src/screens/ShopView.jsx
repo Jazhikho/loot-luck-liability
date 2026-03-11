@@ -1,4 +1,5 @@
 import { Btn } from "../components/Btn.jsx";
+import { getLootName } from "../data/Content.js";
 import { RC } from "../data/Defaults.js";
 import { useI18n } from "../i18n/index.jsx";
 
@@ -112,7 +113,9 @@ export function ShopView({
                 })}`}
             </p>
             <div className="max-h-40 space-y-1 overflow-y-auto">
-              {inv.map((item) => (
+              {inv.map((item) => {
+                const itemName = getLootName(item.sourceId, item.name);
+                return (
                 <div
                   key={item.id}
                   className={`flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs ${
@@ -120,7 +123,7 @@ export function ShopView({
                   }`}
                 >
                   <span className={RC[item.rarity]}>
-                    {item.emoji} {item.name}
+                    {item.emoji} {itemName}
                     {item.luck > 0 && <span className="ml-1 text-emerald-300">{t("ui.shop.luckBadge", { luck: item.luck })}</span>}
                   </span>
                   <div className="flex items-center gap-1">
@@ -144,7 +147,8 @@ export function ShopView({
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
             <p className="mt-2 text-[11px] text-slate-500">{t("ui.shop.totalCargoValue", { gold: invTotal })}</p>
           </div>

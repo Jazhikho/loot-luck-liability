@@ -143,11 +143,11 @@ export function spawnMonster(floor, tier, rooms) {
  */
 export function getDanger(floor, tier, rooms) {
   const d = Math.min(10, Math.round(floor * 1.2 + tier * 1.5 + rooms * 0.7));
-  if (d <= 2) return { label: "Calm", color: "text-green-400", bars: d };
-  if (d <= 4) return { label: "Uneasy", color: "text-yellow-400", bars: d };
-  if (d <= 6) return { label: "Dangerous", color: "text-orange-400", bars: d };
-  if (d <= 8) return { label: "Perilous", color: "text-red-400", bars: d };
-  return { label: "Suicidal", color: "text-red-300", bars: d };
+  if (d <= 2) return { key: "calm", label: "Calm", color: "text-green-400", bars: d };
+  if (d <= 4) return { key: "uneasy", label: "Uneasy", color: "text-yellow-400", bars: d };
+  if (d <= 6) return { key: "dangerous", label: "Dangerous", color: "text-orange-400", bars: d };
+  if (d <= 8) return { key: "perilous", label: "Perilous", color: "text-red-400", bars: d };
+  return { key: "suicidal", label: "Suicidal", color: "text-red-300", bars: d };
 }
 
 /**
@@ -266,10 +266,23 @@ export function getMaxIncomingDamage(foe, player) {
  * @returns {string}
  */
 export function getCombatWarning(player, foe) {
+  const state = getCombatWarningState(player, foe);
+  if (state === "lethal") return "One bad hit or failed bolt ends this run.";
+  if (state === "risky") return "You're in the red. The next bad roll could get ugly.";
+  return "";
+}
+
+/**
+ * Severity bucket for the current combat warning.
+ * @param {{ hp: number, mhp: number, def: number }} player
+ * @param {{ atk: number } | null} foe
+ * @returns {"lethal" | "risky" | ""}
+ */
+export function getCombatWarningState(player, foe) {
   if (!player || !foe) return "";
   const maxHit = getMaxIncomingDamage(foe, player);
-  if (player.hp <= maxHit) return "One bad hit or failed bolt ends this run.";
-  if (player.hp <= Math.max(Math.ceil(player.mhp * 0.25), maxHit * 2)) return "You're in the red. The next bad roll could get ugly.";
+  if (player.hp <= maxHit) return "lethal";
+  if (player.hp <= Math.max(Math.ceil(player.mhp * 0.25), maxHit * 2)) return "risky";
   return "";
 }
 

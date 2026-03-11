@@ -2,17 +2,36 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Game from "./Game.jsx";
+import { I18nProvider, resetLocaleState } from "./i18n/index.jsx";
 import { CombatView } from "./screens/CombatView.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { TitleScreen } from "./screens/TitleScreen.jsx";
 import { getDungeonCatalog } from "./utils/DungeonCatalog.js";
 
+const originalLanguage = window.navigator.language;
+
+function setBrowserLanguage(language) {
+  Object.defineProperty(window.navigator, "language", {
+    configurable: true,
+    value: language,
+  });
+}
+
+function renderWithI18n(ui) {
+  return render(<I18nProvider>{ui}</I18nProvider>);
+}
+
 describe("Loot, Luck & Liability", () => {
   beforeEach(() => {
     localStorage.clear();
+    setBrowserLanguage("en-US");
+    resetLocaleState();
   });
 
   afterEach(() => {
+    localStorage.clear();
+    setBrowserLanguage(originalLanguage);
+    resetLocaleState();
     vi.restoreAllMocks();
   });
 
@@ -74,7 +93,7 @@ describe("Loot, Luck & Liability", () => {
     const newGame = vi.fn();
     const user = userEvent.setup();
 
-    render(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={newGame} goProfile={vi.fn()} />);
+    renderWithI18n(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={newGame} goProfile={vi.fn()} />);
 
     await user.click(screen.getByRole("button", { name: "Start a Fresh Misadventure" }));
     expect(newGame).not.toHaveBeenCalled();
@@ -86,7 +105,7 @@ describe("Loot, Luck & Liability", () => {
   it("opens credits from the title screen and shows the versioned credits block", async () => {
     const user = userEvent.setup();
 
-    render(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={vi.fn()} goProfile={vi.fn()} />);
+    renderWithI18n(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={vi.fn()} goProfile={vi.fn()} />);
 
     await user.click(screen.getByRole("button", { name: "Credits" }));
 
@@ -95,17 +114,30 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText(/Codex \(GPT 5\.4\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Joel Croteau/i)).toBeInTheDocument();
     expect(screen.queryByText(/Timbot/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/v1\.6\.0/i)).toBeInTheDocument();
+    expect(screen.getByText(/v1\.7\.0/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Back to Title" }));
     expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();
+  });
+
+  it("lets the player manually switch between English and Spanish from the title screen", async () => {
+    const user = userEvent.setup();
+
+    renderWithI18n(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={vi.fn()} goProfile={vi.fn()} />);
+
+    expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Espa/i }));
+
+    expect(screen.getByRole("button", { name: /Empezar/i })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("ll_locale_pref"))).toEqual({ source: "manual", locale: "es" });
   });
 
   it("requires confirmation before deleting all data", async () => {
     const nukeData = vi.fn();
     const user = userEvent.setup();
 
-    render(
+    renderWithI18n(
       <ProfileScreen
         toasts={[]}
         prevView="shop"
@@ -127,7 +159,7 @@ describe("Loot, Luck & Liability", () => {
   });
 
   it("keeps the achievements view in an internal scroll panel", () => {
-    render(
+    renderWithI18n(
       <ProfileScreen
         toasts={[]}
         prevView="shop"
@@ -145,7 +177,7 @@ describe("Loot, Luck & Liability", () => {
   });
 
   it("disables potion use in combat at full health", () => {
-    render(
+    renderWithI18n(
       <CombatView
         foe={{ name: "Test Foe", emoji: "X", hp: 10, maxHp: 10, atk: 2, def: 1 }}
         p={{ hp: 20, mhp: 20, pot: 2 }}
@@ -159,7 +191,7 @@ describe("Loot, Luck & Liability", () => {
   });
 
   it("warns when combat is one bad hit from lethal", () => {
-    render(
+    renderWithI18n(
       <CombatView
         foe={{ name: "Coin Wraith", emoji: "W", hp: 10, maxHp: 10, atk: 6, def: 1 }}
         p={{ hp: 6, mhp: 20, def: 2, pot: 1 }}
@@ -169,11 +201,11 @@ describe("Loot, Luck & Liability", () => {
       />
     );
 
-    expect(screen.getByText(/one bad hit or failed bolt ends this run/i)).toBeInTheDocument();
+    expect(screen.getByText(/ends this run|acaba con esta partida/i)).toBeInTheDocument();
   });
 
   it("shows the newest combat text in a central story panel", () => {
-    render(
+    renderWithI18n(
       <CombatView
         foe={{ name: "Coin Wraith", emoji: "W", hp: 10, maxHp: 10, atk: 6, def: 1 }}
         p={{ hp: 10, mhp: 20, def: 2, pot: 1 }}
@@ -353,6 +385,46 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText("Fresh rumor")).toBeInTheDocument();
   });
 
+  it("auto-resolves the first room when you first land on floor one", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.99);
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await user.click(screen.getByRole("button", { name: "Start Adventuring" }));
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+    await user.click(screen.getByRole("button", { name: /The Clover Cellar/i }));
+
+    expect(await screen.findByRole("heading", { name: /Floor 1\/3/ })).toBeInTheDocument();
+    expect(screen.getByText(/Rooms searched: 1/i)).toBeInTheDocument();
+
+    const payload = JSON.parse(window.render_game_to_text());
+    expect(payload.enteredFloors).toEqual([1]);
+    expect(payload.dungeon.floor).toBe(1);
+    expect(payload.dungeon.rooms).toBe(1);
+    expect(payload.forcedEntryActive).toBe(false);
+  });
+
+  it("auto-resolves the first room when descending to a new floor", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.99);
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await user.click(screen.getByRole("button", { name: "Start Adventuring" }));
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+    await user.click(screen.getByRole("button", { name: /The Clover Cellar/i }));
+    await user.click(screen.getByRole("button", { name: /Descend to Floor 2/i }));
+
+    expect(await screen.findByRole("heading", { name: /Floor 2\/3/ })).toBeInTheDocument();
+    expect(screen.getByText(/Rooms searched: 1/i)).toBeInTheDocument();
+
+    const payload = JSON.parse(window.render_game_to_text());
+    expect(payload.enteredFloors).toEqual([1, 2]);
+    expect(payload.dungeon.floor).toBe(2);
+    expect(payload.dungeon.rooms).toBe(1);
+  });
+
   it("warns before leaving town hurt and lets the player cancel", async () => {
     localStorage.setItem(
       "ll_save",
@@ -456,6 +528,8 @@ describe("Loot, Luck & Liability", () => {
     const payload = JSON.parse(window.render_game_to_text());
 
     expect(payload.departureWarningOpen).toBe(true);
+    expect(payload.locale).toBe("en");
+    expect(payload.localeSource).toBe("auto");
     expect(payload.story.latest).toBe("The snug eyes your bandages suspiciously.");
     expect(payload.story.recent).toContain("The snug eyes your bandages suspiciously.");
   });

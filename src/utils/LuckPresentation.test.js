@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { dialogueResources } from "../i18n/dialogueResources.js";
+import { resetLocaleState, setLocalePreference } from "../i18n/index.jsx";
 import {
   decorateAttackOutcome,
   decorateDeathOutcome,
@@ -12,7 +14,19 @@ import {
   getLuckTier,
 } from "./LuckPresentation.js";
 
+const MONSTER_EVENT_CATEGORIES = ["encounterQuote", "hurtQuote", "enemyAttackQuote", "defeatQuote"];
+
 describe("LuckPresentation", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    resetLocaleState();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    resetLocaleState();
+  });
+
   it("maps the published luck tiers correctly", () => {
     expect(getLuckTier(0).key).toBe("grounded");
     expect(getLuckTier(2).key).toBe("fortunate");
@@ -20,8 +34,21 @@ describe("LuckPresentation", () => {
     expect(getLuckTier(8).key).toBe("clover-cursed");
   });
 
+  it("gives every monster at least ten lines per monster-driven event pool", () => {
+    for (const localeId of ["en", "es"]) {
+      const monsters = dialogueResources[localeId].monsterQuotes;
+      for (const [monsterId, quoteSet] of Object.entries(monsters)) {
+        for (const category of MONSTER_EVENT_CATEGORIES) {
+          for (const tierKey of ["grounded", "fortunate", "uncanny", "clover-cursed"]) {
+            expect(quoteSet[category][tierKey].length, `${localeId}:${monsterId}:${category}:${tierKey}`).toBeGreaterThanOrEqual(10);
+          }
+        }
+      }
+    }
+  });
+
   it("changes combat narration without changing resolved damage", () => {
-    const resolved = { targetName: "Coin Wraith", damage: 7, highRoll: true };
+    const resolved = { targetId: "coin_wraith", targetName: "Coin Wraith", damage: 7, highRoll: true };
 
     const grounded = decorateAttackOutcome(resolved, 0);
     const cursed = decorateAttackOutcome(resolved, 8);
@@ -32,12 +59,12 @@ describe("LuckPresentation", () => {
   });
 
   it("keeps narration deterministic for the same input", () => {
-    const resolved = { targetName: "Coin Wraith", damage: 7, highRoll: true };
+    const resolved = { targetId: "coin_wraith", targetName: "Coin Wraith", damage: 7, highRoll: true };
 
     expect(decorateAttackOutcome(resolved, 8).message).toBe(decorateAttackOutcome(resolved, 8).message);
-    expect(decorateEnemyAttackOutcome({ attackerName: "Pub Goblin", damage: 4 }, 5).message).toBe(
-      decorateEnemyAttackOutcome({ attackerName: "Pub Goblin", damage: 4 }, 5).message
-    );
+    expect(
+      decorateEnemyAttackOutcome({ attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 4 }, 5).message
+    ).toBe(decorateEnemyAttackOutcome({ attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 4 }, 5).message);
   });
 
   it("keeps loot payloads identical across luck tiers", () => {
@@ -53,7 +80,7 @@ describe("LuckPresentation", () => {
 
   it("adds lucky boss-style presentation without changing monster stats", () => {
     const encounter = {
-      monster: { name: "Bog King on a Bad Night", hp: 40, maxHp: 40, atk: 12, def: 6 },
+      monster: { id: "bog_king_on_a_bad_night", name: "Bog King on a Bad Night", hp: 40, maxHp: 40, atk: 12, def: 6 },
       floor: 4,
       rooms: 3,
     };
@@ -69,18 +96,18 @@ describe("LuckPresentation", () => {
   it("uses fourth-wall enemy dialogue at clover-cursed luck", () => {
     const encounter = decorateMonsterEncounter(
       {
-        monster: { name: "Pub Goblin", hp: 12, maxHp: 12, atk: 3, def: 1 },
+        monster: { id: "pub_goblin", name: "Pub Goblin", hp: 12, maxHp: 12, atk: 3, def: 1 },
         floor: 1,
         rooms: 1,
       },
       8
     );
-    const enemyAttack = decorateEnemyAttackOutcome({ attackerName: "Pub Goblin", damage: 4 }, 8);
-    const defeat = decorateEnemyDefeatOutcome({ foeName: "Pub Goblin" }, 8);
+    const enemyAttack = decorateEnemyAttackOutcome({ attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 4 }, 8);
+    const defeat = decorateEnemyDefeatOutcome({ foeId: "pub_goblin", foeName: "Pub Goblin" }, 8);
 
-    expect(encounter.message).toMatch(/Dev|RNG|seed|patch|algorithm/i);
-    expect(enemyAttack.message).toMatch(/RNG|Dev|seed|frame|engine|procedural/i);
-    expect(defeat.message).toMatch(/Dev|RNG|patch|analytics|metrics|bug report|loading screen/i);
+    expect(encounter.message).toMatch(/Dev|seed|patch|analytics|geometry|QA/i);
+    expect(enemyAttack.message).toMatch(/RNG|Dev|seed|frame|engine|patch/i);
+    expect(defeat.message).toMatch(/Dev|RNG|patch|analytics|metrics|bug report|tooltips|intended behavior|joke landed/i);
   });
 
   it("adds more varied absurd text to travel, traps, and empty rooms at high luck", () => {
@@ -105,24 +132,23 @@ describe("LuckPresentation", () => {
   });
 
   it("keeps grounded banter out of fourth-wall mode at low luck", () => {
-    const attack = decorateAttackOutcome({ targetName: "Coin Wraith", damage: 5, highRoll: false }, 0);
+    const attack = decorateAttackOutcome({ targetId: "coin_wraith", targetName: "Coin Wraith", damage: 5, highRoll: false }, 0);
 
     expect(attack.message).not.toMatch(/Dev|RNG|patch|seed|analytics|engine/i);
   });
 
-  it("produces a wider variety of lines across different encounter inputs", () => {
-    const encounterMessages = new Set(
-      ["Pub Goblin", "Coin Wraith", "Bog Lurker", "Fae Debt Collector"].map((name, index) =>
-        decorateMonsterEncounter({ monster: { name }, floor: index + 1, rooms: index + 2 }, 8).message
-      )
-    );
-    const attackMessages = new Set(
-      [4, 5, 6, 7, 8].map((damage, index) =>
-        decorateAttackOutcome({ targetName: `Foe ${index}`, damage, highRoll: true }, 8).message
-      )
+  it("surfaces Spanish writing when Spanish is active", () => {
+    setLocalePreference("es");
+
+    const encounter = decorateMonsterEncounter(
+      {
+        monster: { id: "fae_debt_collector", name: "Cobrador de Deudas Feérico", hp: 12, maxHp: 12, atk: 3, def: 1 },
+        floor: 2,
+        rooms: 2,
+      },
+      8
     );
 
-    expect(encounterMessages.size).toBeGreaterThan(2);
-    expect(attackMessages.size).toBeGreaterThan(3);
+    expect(encounter.message).toMatch(/Dev|sala|algoritmo|semilla|fortuna|clip/i);
   });
 });
