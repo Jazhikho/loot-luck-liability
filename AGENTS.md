@@ -22,4 +22,6 @@
 ## Release Notes
 
 - Update `VERSION.md` whenever behavior changes.
-- Bump `package.json` version in step with the latest `VERSION.md` entry.
+- Keep the shipped app version in lockstep across `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, `src-tauri/tauri.conf.json`, and `android/app/build.gradle` `versionName`.
+- Derive Android `versionCode` directly from the semantic version as `major * 100 + minor * 10 + patch` (for example, `1.7.1` -> `171`).
+- Prefer reading the app version from `package.json` in tests and UI rather than hardcoding version strings.
