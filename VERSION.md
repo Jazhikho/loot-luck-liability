@@ -1,5 +1,10 @@
 # Version History
 
+## 1.7.1.1 - 2026-03-11
+
+- Fixed corrupted emoji/icon data so dungeon, monster, loot, and achievement glyphs render normally again instead of showing mojibake.
+- Repaired the damaged visible version wiring and added encoding regression coverage for core content tables and localized resource strings.
+
 ## 1.7.1.0 - 2026-03-11
 
 - Added diminishing returns to repeated room farming on the same floor so shallow endless runs dry up instead of outpaying deeper content.

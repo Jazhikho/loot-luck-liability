@@ -43,7 +43,47 @@ function buildEnglishContent() {
   };
 }
 
-export const resources = {
+const MOJIBAKE_PATTERN = /Ãƒ|Ã|Â|â€¢|â€™|â€œ|â€\u009d|â€”|â€“/;
+
+function normalizeMojibakeString(value) {
+  if (!MOJIBAKE_PATTERN.test(value)) {
+    return value;
+  }
+
+  let nextValue = value;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const decoded = Buffer.from(nextValue, "latin1").toString("utf8");
+    if (decoded === nextValue) {
+      break;
+    }
+    nextValue = decoded;
+    if (!MOJIBAKE_PATTERN.test(nextValue)) {
+      break;
+    }
+  }
+
+  return nextValue;
+}
+
+function normalizeLocaleStrings(value) {
+  if (typeof value === "string") {
+    return normalizeMojibakeString(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeLocaleStrings(entry));
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, normalizeLocaleStrings(entry)])
+    );
+  }
+
+  return value;
+}
+
+const rawResources = {
   en: {
     ui: {
       common: {
@@ -149,10 +189,6 @@ export const resources = {
       combatWarnings: {
         lethal: "One bad hit or failed bolt ends this run.",
         risky: "You're in the red. The next bad roll could get ugly.",
-      },
-      combatWarnings: {
-        lethal: "Un mal golpe o una huida fallida acaba con esta partida.",
-        risky: "EstÃ¡s en rojo. La prÃ³xima mala tirada puede ponerse fea.",
       },
       floorHub: {
         floorLabel: "Floor {floor}/{total}",
@@ -604,3 +640,5 @@ export const resources = {
   ko: {},
   "zh-Hans": {},
 };
+
+export const resources = normalizeLocaleStrings(rawResources);
