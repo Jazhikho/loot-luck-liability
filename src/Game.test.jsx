@@ -1,12 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import packageInfo from "../package.json";
 import Game from "./Game.jsx";
 import { I18nProvider, resetLocaleState } from "./i18n/index.jsx";
 import { CombatView } from "./screens/CombatView.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { TitleScreen } from "./screens/TitleScreen.jsx";
+import { APP_VERSION } from "./utils/AppVersion.js";
 import { getDungeonCatalog } from "./utils/DungeonCatalog.js";
 
 const originalLanguage = window.navigator.language;
@@ -119,7 +119,7 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText(/Codex \(GPT 5\.4\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Joel Croteau/i)).toBeInTheDocument();
     expect(screen.queryByText(/Timbot/i)).not.toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`v${escapeRegExp(packageInfo.version)}`, "i"))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`v${escapeRegExp(APP_VERSION)}`, "i"))).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Back to Title" }));
     expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();

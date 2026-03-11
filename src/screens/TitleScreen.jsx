@@ -1,9 +1,9 @@
 import { useState } from "react";
-import packageInfo from "../../package.json";
 import { ToastLayer } from "../components/ToastLayer.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { LocaleSelector } from "../components/LocaleSelector.jsx";
 import { useI18n } from "../i18n/index.jsx";
+import { APP_VERSION } from "../utils/AppVersion.js";
 import { LS } from "../utils/Helpers.js";
 
 /**
@@ -69,7 +69,7 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">{t("ui.title.creditsVersion")}</p>
-                <p className="text-sm text-slate-300">v{packageInfo.version}</p>
+                <p className="text-sm text-slate-300">v{APP_VERSION}</p>
               </div>
               <p className="text-sm leading-relaxed text-slate-400">{t("ui.title.creditsFooter")}</p>
             </div>

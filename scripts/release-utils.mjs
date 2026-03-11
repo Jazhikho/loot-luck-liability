@@ -6,7 +6,8 @@ import packageInfo from "../package.json" with { type: "json" };
 
 export const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const releaseDir = path.join(rootDir, "release");
-export const version = packageInfo.version;
+export const version = packageInfo.appVersion || `${packageInfo.version}.0`;
+export const semverVersion = packageInfo.version;
 export const productName = "LootLuckLiability";
 export const itchTarget = process.env.ITCH_TARGET || "jazhikho/loot-luck-liability";
 
