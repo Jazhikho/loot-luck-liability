@@ -45,6 +45,16 @@ function buildEnglishContent() {
 
 const MOJIBAKE_PATTERN = /Ãƒ|Ã|Â|â€¢|â€™|â€œ|â€\u009d|â€”|â€“/;
 
+const UTF8_DECODER = new TextDecoder("utf-8", { fatal: false });
+
+function latin1StringToBytes(value) {
+  const bytes = new Uint8Array(value.length);
+  for (let index = 0; index < value.length; index += 1) {
+    bytes[index] = value.charCodeAt(index) & 0xff;
+  }
+  return bytes;
+}
+
 function normalizeMojibakeString(value) {
   if (!MOJIBAKE_PATTERN.test(value)) {
     return value;
@@ -52,7 +62,7 @@ function normalizeMojibakeString(value) {
 
   let nextValue = value;
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const decoded = Buffer.from(nextValue, "latin1").toString("utf8");
+    const decoded = UTF8_DECODER.decode(latin1StringToBytes(nextValue));
     if (decoded === nextValue) {
       break;
     }

@@ -1,5 +1,10 @@
 # Version History
 
+## 1.7.1.2 - 2026-03-11
+
+- Replaced the server-only mojibake repair path with a browser-safe UTF-8 decoder so the web build no longer crashes on startup.
+- Added a regression test that loads locale resources with `Buffer` unavailable, matching the real browser runtime.
+
 ## 1.7.1.1 - 2026-03-11
 
 - Fixed corrupted emoji/icon data so dungeon, monster, loot, and achievement glyphs render normally again instead of showing mojibake.

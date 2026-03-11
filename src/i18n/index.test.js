@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getLocalizedDungeons, getLocalizedLootPools } from "../data/Content.js";
 import { decorateAttackOutcome } from "../utils/LuckPresentation.js";
 import {
@@ -94,5 +94,20 @@ describe("i18n scaffold", () => {
     );
 
     expect(attack.message).toMatch(/Espectro|damage|golpe|motor|universo|fortuna/i);
+  });
+
+  it("loads locale resources without relying on Buffer in the browser", async () => {
+    const originalBuffer = globalThis.Buffer;
+
+    try {
+      vi.resetModules();
+      globalThis.Buffer = undefined;
+      const module = await import("./resources.js");
+
+      expect(module.resources.en.ui.locale.spanish).toBe("Español");
+      expect(module.resources.es.ui.combatWarnings.risky).toMatch(/Estás en rojo/i);
+    } finally {
+      globalThis.Buffer = originalBuffer;
+    }
   });
 });
