@@ -2,6 +2,7 @@ import { Bar } from "../components/Bar.jsx";
 import { Btn } from "../components/Btn.jsx";
 import { DangerMeter } from "../components/DangerMeter.jsx";
 import { StoryPanel } from "../components/StoryPanel.jsx";
+import { useI18n } from "../i18n/index.jsx";
 
 /**
  * Floor hub: omens, HP, luck, story-forward room text, and room actions.
@@ -36,6 +37,7 @@ export function FloorHubView({
   pendingDeath = null,
   storyEntries = [],
 }) {
+  const { t } = useI18n();
   const invTotal = inv.reduce((sum, item) => sum + item.value, 0);
   const floorTradeoff =
     fl >= dng.floors
@@ -53,23 +55,21 @@ export function FloorHubView({
           <h2 className="text-lg font-bold text-yellow-100">
             {dng.e} Floor {fl}/{dng.floors}
           </h2>
-          <p className="text-xs text-slate-400">Rooms searched: {rooms}</p>
+          <p className="text-xs text-slate-400">{t("ui.floorHub.roomsSearched", { count: rooms })}</p>
           <p className="mt-1 text-xs text-amber-200/80">{floorTradeoff}</p>
         </div>
         <div className="flex flex-col items-center gap-2">
           <DangerMeter floor={fl} tier={dng.tier} roomCount={rooms} />
           <div className="w-full max-w-xs">
-            <Bar cur={p.hp} max={p.mhp} label="Your HP" />
+            <Bar cur={p.hp} max={p.mhp} label={t("ui.combat.yourHp")} />
           </div>
-          <p className="text-xs text-emerald-300">
-            Active Luck: {currentLuck} ({luckTier.label})
-          </p>
+          <p className="text-xs text-emerald-300">{t("ui.floorHub.activeLuck", { luck: currentLuck, tier: luckTier.label })}</p>
         </div>
         <p className="text-center text-xs italic text-slate-400">{hint}</p>
         <StoryPanel
           entries={storyEntries}
-          title="Dungeon Commentary"
-          subtitle="The room descriptions and bad omens should be loud enough to read without squinting at the footer."
+          title={t("ui.floorHub.commentaryTitle")}
+          subtitle={t("ui.floorHub.commentarySubtitle")}
           compact
         />
         {pendingDeath && (
@@ -79,7 +79,7 @@ export function FloorHubView({
         )}
         <div className="mx-auto max-w-xs space-y-2">
           <Btn onClick={exploreRoom} disabled={Boolean(pendingDeath)} full c="bg-emerald-700 hover:bg-emerald-600">
-            Explore a Room
+            {t("ui.floorHub.exploreRoom")}
           </Btn>
           {fl < dng.floors && (
             <Btn
@@ -88,21 +88,19 @@ export function FloorHubView({
               full
               c="bg-cyan-700 hover:bg-cyan-600"
             >
-              Descend to Floor {fl + 1}
+              {t("ui.floorHub.descend", { floor: fl + 1 })}
             </Btn>
           )}
           <Btn onClick={() => startRetreat(dng)} disabled={Boolean(pendingDeath)} full c="bg-amber-700 hover:bg-amber-600">
-            Retreat to Town
+            {t("ui.floorHub.retreat")}
           </Btn>
           {p.pot > 0 && p.hp < p.mhp && (
             <Btn onClick={usePot} disabled={Boolean(pendingDeath)} full c="bg-teal-700 hover:bg-teal-600">
-              Drink Tonic ({p.pot})
+              {t("ui.floorHub.drinkTonic", { count: p.pot })}
             </Btn>
           )}
         </div>
-        <p className="text-center text-xs text-slate-500">
-          Cargo {inv.length} items worth {invTotal}g
-        </p>
+        <p className="text-center text-xs text-slate-500">{t("ui.floorHub.cargoSummary", { count: inv.length, gold: invTotal })}</p>
       </div>
     </div>
   );

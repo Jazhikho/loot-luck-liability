@@ -1,4 +1,5 @@
 import { DUNGEONS } from "../data/Constants.js";
+import { localizeDungeon } from "../data/Content.js";
 
 export const GENERATED_DUNGEON_ID_START = 1000;
 export const MAX_GENERATED_DUNGEONS = 12;
@@ -88,7 +89,7 @@ export function generateDungeon(index) {
 export function getDungeonCatalog(unlocked = [1, 2]) {
   const generatedCount = getGeneratedDungeonCount(unlocked);
   return [
-    ...DUNGEONS,
+    ...DUNGEONS.map(localizeDungeon),
     ...Array.from({ length: generatedCount }, (_, offset) => generateDungeon(offset + 1)),
   ];
 }

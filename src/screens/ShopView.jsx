@@ -1,5 +1,6 @@
 import { Btn } from "../components/Btn.jsx";
 import { RC } from "../data/Defaults.js";
+import { useI18n } from "../i18n/index.jsx";
 
 /**
  * Broker's snug: sell cargo, buy supplies, run upgrades, and head out.
@@ -48,6 +49,7 @@ export function ShopView({
   weaponBonus,
   armorBonus,
 }) {
+  const { t } = useI18n();
   const invTotal = inv.reduce((sum, item) => sum + item.value, 0);
 
   return (
@@ -55,56 +57,59 @@ export function ShopView({
       <div className="space-y-4">
         <div className="text-center">
           <div className="mb-1 text-5xl">🍺</div>
-          <h2 className="text-lg font-bold text-yellow-100">The Broker's Snug</h2>
+          <h2 className="text-lg font-bold text-yellow-100">{t("ui.shop.heading")}</h2>
           <p className="text-sm italic text-emerald-100/70">&quot;{mQuote}&quot;</p>
           <p className="mt-2 text-xs text-slate-400">
-            Base Luck {p.luck}. Active Luck {currentLuck}. Lucky cargo in hand: {luckyItemCount}.
+            {t("ui.shop.luckSummary", { baseLuck: p.luck, activeLuck: currentLuck, luckyCargo: luckyItemCount })}
           </p>
         </div>
         {p.hp < p.mhp && (
           <div className="rounded-xl border border-rose-500/30 bg-rose-950/40 px-3 py-3 text-sm text-rose-100">
-            <p className="font-semibold">You are still hurt.</p>
-            <p className="mt-1 text-xs text-rose-100/80">
-              HP {p.hp}/{p.mhp}. If you leave town like this, the Green Dark gets first swing. Hearth Rest restores you
-              to full before the next dive.
-            </p>
+            <p className="font-semibold">{t("ui.shop.hurtTitle")}</p>
+            <p className="mt-1 text-xs text-rose-100/80">{t("ui.shop.hurtBody", { hp: p.hp, maxHp: p.mhp })}</p>
           </div>
         )}
         <div className="grid grid-cols-2 gap-2">
           <Btn onClick={sellAll} disabled={sellableTotal <= 0} c="bg-amber-700 hover:bg-amber-600">
-            Cash In ({sellableTotal}g)
+            {t("ui.shop.cashIn", { gold: sellableTotal })}
           </Btn>
           <Btn onClick={buyPot} c="bg-teal-700 hover:bg-teal-600">
-            Tonic (15g)
+            {t("ui.shop.tonic", { count: 15 })}
           </Btn>
           <Btn onClick={upgWeapon} c="bg-emerald-700 hover:bg-emerald-600">
-            <span className="block">Weapon Lv{p.wlv + 1}</span>
-            <span className="text-xs text-emerald-100/80">+{weaponBonus.atk} ATK • {upgCost(p.wlv)}g</span>
+            <span className="block">{t("ui.shop.weaponLevel", { level: p.wlv + 1 })}</span>
+            <span className="text-xs text-emerald-100/80">
+              {t("ui.shop.weaponBenefit", { atk: weaponBonus.atk, gold: upgCost(p.wlv) })}
+            </span>
           </Btn>
           <Btn onClick={upgArmor} c="bg-cyan-700 hover:bg-cyan-600">
-            <span className="block">Armor Lv{p.alv + 1}</span>
+            <span className="block">{t("ui.shop.armorLevel", { level: p.alv + 1 })}</span>
             <span className="text-xs text-cyan-100/80">
-              +{armorBonus.def} DEF / +{armorBonus.hp} HP • {upgCost(p.alv)}g
+              {t("ui.shop.armorBenefit", { def: armorBonus.def, hp: armorBonus.hp, gold: upgCost(p.alv) })}
             </span>
           </Btn>
           <Btn onClick={upgLuck} c="bg-lime-700 hover:bg-lime-600">
-            Luck +1 ({luckCost}g)
+            {t("ui.shop.luckUpgrade", { gold: luckCost })}
           </Btn>
           <Btn onClick={restInn} disabled={p.hp >= p.mhp} c="bg-slate-700 hover:bg-slate-600">
-            Hearth Rest to Full (10g)
+            {t("ui.shop.hearthRest")}
           </Btn>
           <div className="col-span-2">
             <Btn onClick={openDungeonPicker} full c="bg-emerald-600 hover:bg-emerald-500">
-              Chase the Green Dark
+              {t("ui.shop.chaseDark")}
             </Btn>
           </div>
         </div>
         {inv.length > 0 && (
           <div>
-            <h3 className="mb-1.5 text-xs font-bold text-emerald-100/70">CARGO HOLD ({inv.length})</h3>
+            <h3 className="mb-1.5 text-xs font-bold text-emerald-100/70">{t("ui.shop.cargoHold", { count: inv.length })}</h3>
             <p className="mb-2 text-[11px] text-slate-500">
-              Locked cargo stay off the sales bar. Only shamrock-marked cargo affect luck; the rest are pure resale.
-              {lockedCount > 0 && ` ${lockedCount} item${lockedCount === 1 ? "" : "s"} currently held back.`}
+              {t("ui.shop.cargoHelp")}
+              {lockedCount > 0 &&
+                ` ${t("ui.shop.cargoHeldSuffix", {
+                  count: lockedCount,
+                  suffix: lockedCount === 1 ? "" : "s",
+                })}`}
             </p>
             <div className="max-h-40 space-y-1 overflow-y-auto">
               {inv.map((item) => (
@@ -116,7 +121,7 @@ export function ShopView({
                 >
                   <span className={RC[item.rarity]}>
                     {item.emoji} {item.name}
-                    {item.luck > 0 && <span className="ml-1 text-emerald-300">Luck +{item.luck}</span>}
+                    {item.luck > 0 && <span className="ml-1 text-emerald-300">{t("ui.shop.luckBadge", { luck: item.luck })}</span>}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
@@ -128,7 +133,7 @@ export function ShopView({
                           : "bg-slate-700 hover:bg-slate-600"
                       }`}
                     >
-                      {item.locked ? "Held" : "Hold"}
+                      {item.locked ? t("ui.shop.held") : t("ui.shop.hold")}
                     </button>
                     <button
                       type="button"
@@ -141,7 +146,7 @@ export function ShopView({
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-slate-500">Total cargo value: {invTotal}g</p>
+            <p className="mt-2 text-[11px] text-slate-500">{t("ui.shop.totalCargoValue", { gold: invTotal })}</p>
           </div>
         )}
       </div>

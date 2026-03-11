@@ -4,7 +4,17 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    "Noto Sans",
+    "Noto Sans CJK SC",
+    "Noto Sans JP",
+    "Noto Sans KR",
+    "Segoe UI",
+    "Hiragino Sans",
+    "Microsoft YaHei UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
   background:
     radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 30%),
     radial-gradient(circle at bottom right, rgba(250, 204, 21, 0.12), transparent 25%),

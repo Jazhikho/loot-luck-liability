@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ToastLayer } from "../components/ToastLayer.jsx";
 import { Btn } from "../components/Btn.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
-import { ACHDEFS } from "../data/Constants.js";
+import { getAchievementDefs } from "../data/Content.js";
+import { useI18n } from "../i18n/index.jsx";
 
 /**
  * Profile: stats, achievements, highscores; back and delete data.
@@ -19,19 +20,21 @@ export function ProfileScreen({
   hs,
   nukeData,
 }) {
+  const { t } = useI18n();
   const [confirmReset, setConfirmReset] = useState(false);
+  const achievements = getAchievementDefs();
 
   const statRows = [
-    ["Gold Earned", `${lt.gold}g`],
-    ["Monsters Slain", lt.slain],
-    ["Deaths", lt.deaths],
-    ["Dungeons Cleared", lt.clears],
-    ["Rooms Explored", lt.rooms],
-    ["Items Found", lt.items],
-    ["Potions Used", lt.potions],
-    ["Runs Started", lt.runs],
-    ["Deepest Floor", lt.bestFloor],
-    ["Best Luck", lt.bestLuck],
+    [t("ui.profile.statLabels.gold"), `${lt.gold}g`],
+    [t("ui.profile.statLabels.slain"), lt.slain],
+    [t("ui.profile.statLabels.deaths"), lt.deaths],
+    [t("ui.profile.statLabels.clears"), lt.clears],
+    [t("ui.profile.statLabels.rooms"), lt.rooms],
+    [t("ui.profile.statLabels.items"), lt.items],
+    [t("ui.profile.statLabels.potions"), lt.potions],
+    [t("ui.profile.statLabels.runs"), lt.runs],
+    [t("ui.profile.statLabels.bestFloor"), lt.bestFloor],
+    [t("ui.profile.statLabels.bestLuck"), lt.bestLuck],
   ];
 
   return (
@@ -39,9 +42,9 @@ export function ProfileScreen({
       <ToastLayer toasts={toasts} />
       <ConfirmDialog
         open={confirmReset}
-        title="Delete all saved data?"
-        body="This removes the current run, lifetime stats, achievements, and the hall of fame. This cannot be undone."
-        confirmLabel="Delete Everything"
+        title={t("ui.profile.deleteTitle")}
+        body={t("ui.profile.deleteBody")}
+        confirmLabel={t("ui.common.deleteEverything")}
         onConfirm={() => {
           setConfirmReset(false);
           nukeData();
@@ -52,16 +55,20 @@ export function ProfileScreen({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-lg font-bold text-transparent">
-              Loot, Luck &amp; Liability
+              {t("content.title")}
             </h1>
-            <p className="text-xs text-emerald-100/70">Broker&apos;s Ledger</p>
+            <p className="text-xs text-emerald-100/70">{t("ui.profile.ledgerSubtitle")}</p>
           </div>
           <Btn onClick={() => setView(prevView)} c="bg-slate-700 hover:bg-slate-600">
-            Back
+            {t("ui.common.back")}
           </Btn>
         </div>
         <div className="flex gap-1">
-          {[["stats", "Stats"], ["ach", "Achievements"], ["hs", "Highscores"]].map(([key, label]) => (
+          {[
+            ["stats", t("ui.profile.stats")],
+            ["ach", t("ui.profile.achievements")],
+            ["hs", t("ui.profile.highscores")],
+          ].map(([key, label]) => (
             <button
               key={key}
               type="button"
@@ -78,86 +85,86 @@ export function ProfileScreen({
           {profTab === "stats" && (
             <div className="h-full overflow-y-auto pr-1">
               <div className="space-y-4">
-              <h2 className="text-base font-bold text-yellow-100">Lifetime Tally</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {statRows.map(([label, value]) => (
-                  <div key={label} className="rounded-lg bg-slate-800 p-3">
-                    <div className="text-xs text-slate-400">{label}</div>
-                    <div className="font-bold text-white">{value}</div>
-                  </div>
-                ))}
-              </div>
+                <h2 className="text-base font-bold text-yellow-100">{t("ui.profile.lifetimeTally")}</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {statRows.map(([label, value]) => (
+                    <div key={label} className="rounded-lg bg-slate-800 p-3">
+                      <div className="text-xs text-slate-400">{label}</div>
+                      <div className="font-bold text-white">{value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
           {profTab === "ach" && (
             <div className="h-full overflow-y-auto pr-1" data-testid="achievements-panel">
               <div className="space-y-3">
-              <h2 className="text-base font-bold text-yellow-100">
-                Achievements ({ach.length}/{ACHDEFS.length})
-              </h2>
-              <div className="h-2 w-full rounded-full bg-slate-700">
-                <div
-                  className="h-2 rounded-full bg-emerald-500 transition-all"
-                  style={{ width: `${(ach.length / ACHDEFS.length) * 100}%` }}
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                {ACHDEFS.map((achievement) => {
-                  const hasAchievement = ach.includes(achievement.id);
-                  return (
-                    <div
-                      key={achievement.id}
-                      className={`flex items-center gap-3 rounded-lg p-3 ${
-                        hasAchievement ? "bg-slate-800" : "bg-slate-950 opacity-50"
-                      }`}
-                    >
-                      <span className="text-2xl">{hasAchievement ? achievement.e : "Locked"}</span>
-                      <div>
-                        <p className={`text-sm font-bold ${hasAchievement ? "text-yellow-200" : "text-slate-400"}`}>
-                          {achievement.name}
-                        </p>
-                        <p className="text-xs text-slate-400">{achievement.desc}</p>
+                <h2 className="text-base font-bold text-yellow-100">
+                  {t("ui.profile.achievementsTitle", { count: ach.length, total: achievements.length })}
+                </h2>
+                <div className="h-2 w-full rounded-full bg-slate-700">
+                  <div
+                    className="h-2 rounded-full bg-emerald-500 transition-all"
+                    style={{ width: `${(ach.length / achievements.length) * 100}%` }}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {achievements.map((achievement) => {
+                    const hasAchievement = ach.includes(achievement.id);
+                    return (
+                      <div
+                        key={achievement.id}
+                        className={`flex items-center gap-3 rounded-lg p-3 ${
+                          hasAchievement ? "bg-slate-800" : "bg-slate-950 opacity-50"
+                        }`}
+                      >
+                        <span className="text-2xl">{hasAchievement ? achievement.e : t("ui.common.locked")}</span>
+                        <div>
+                          <p className={`text-sm font-bold ${hasAchievement ? "text-yellow-200" : "text-slate-400"}`}>
+                            {achievement.name}
+                          </p>
+                          <p className="text-xs text-slate-400">{achievement.desc}</p>
+                        </div>
+                        {hasAchievement && <span className="ml-auto text-xs font-bold text-emerald-300">{t("ui.profile.done")}</span>}
                       </div>
-                      {hasAchievement && <span className="ml-auto text-xs font-bold text-emerald-300">Done</span>}
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
           {profTab === "hs" && (
             <div className="h-full overflow-y-auto pr-1">
               <div className="space-y-3">
-              <h2 className="text-base font-bold text-yellow-100">Hall of Hauls (Top 5 Runs)</h2>
-              {hs.length === 0 ? (
-                <p className="py-8 text-center text-sm text-slate-500">No entries yet. Fortune prefers a little history.</p>
-              ) : (
-                <div className="space-y-2">
-                  {hs.map((entry, index) => (
-                    <div
-                      key={`${entry.date}-${index}`}
-                      className={`flex items-center gap-3 rounded-lg p-3 ${
-                        index === 0 ? "border border-yellow-700 bg-yellow-950/60" : "bg-slate-800"
-                      }`}
-                    >
-                      <span className="w-8 text-center text-2xl font-bold">
-                        {index === 0 ? "1" : index === 1 ? "2" : index === 2 ? "3" : `#${index + 1}`}
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex flex-wrap gap-x-4 text-sm">
-                          <span className="font-bold text-amber-300">{entry.gold}g</span>
-                          <span>{entry.slain} slain</span>
-                          <span>Floor {entry.floor}</span>
-                          <span>{entry.rooms} rooms</span>
+                <h2 className="text-base font-bold text-yellow-100">{t("ui.profile.hallOfHauls")}</h2>
+                {hs.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-slate-500">{t("ui.profile.noEntries")}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {hs.map((entry, index) => (
+                      <div
+                        key={`${entry.date}-${index}`}
+                        className={`flex items-center gap-3 rounded-lg p-3 ${
+                          index === 0 ? "border border-yellow-700 bg-yellow-950/60" : "bg-slate-800"
+                        }`}
+                      >
+                        <span className="w-8 text-center text-2xl font-bold">
+                          {index === 0 ? "1" : index === 1 ? "2" : index === 2 ? "3" : `#${index + 1}`}
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap gap-x-4 text-sm">
+                            <span className="font-bold text-amber-300">{entry.gold}g</span>
+                            <span>{t("ui.profile.slainLabel", { count: entry.slain })}</span>
+                            <span>{t("ui.profile.floorLabel", { floor: entry.floor })}</span>
+                            <span>{t("ui.profile.roomsLabel", { count: entry.rooms })}</span>
+                          </div>
+                          <p className="text-xs text-slate-500">{entry.date}</p>
                         </div>
-                        <p className="text-xs text-slate-500">{entry.date}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -167,7 +174,7 @@ export function ProfileScreen({
           onClick={() => setConfirmReset(true)}
           className="mx-auto block text-xs text-slate-600 transition-colors hover:text-rose-300"
         >
-          Delete All Data
+          {t("ui.common.deleteAllData")}
         </button>
       </div>
     </div>

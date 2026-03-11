@@ -1,5 +1,5 @@
 import { makeId, pick } from "./Helpers.js";
-import { LOOT, MONSTERS } from "../data/Constants.js";
+import { getLocalizedLootPools, getLocalizedMonsters } from "../data/Content.js";
 
 const LUCK_UPGRADE_COSTS = [20, 35, 55, 80, 110, 145];
 const WEAPON_ATK_BONUS = 4;
@@ -8,27 +8,27 @@ const ARMOR_HP_BONUS = 6;
 
 const LOOT_METADATA = {
   uncommon: {
-    "Moonlit Bodhran with a Cracked Skin": { minTier: 1, minFloor: 1, weight: 1.1, floorScale: 0.18, tierScale: 0.14 },
-    "Cloak of the Last Call Prophet": { minTier: 2, minFloor: 2, weight: 0.9, floorScale: 0.32, tierScale: 0.42 },
-    "Bottle of Rainbow Sediment": { minTier: 2, minFloor: 3, weight: 0.85, floorScale: 0.35, tierScale: 0.45 },
-    "Ledger of Near-Missed Miracles": { minTier: 2, minFloor: 4, weight: 0.8, floorScale: 0.38, tierScale: 0.5 },
-    "Silver Spoon of the Seventh Pour": { minTier: 3, minFloor: 4, weight: 0.65, floorScale: 0.45, tierScale: 0.58 },
+    moonlit_bodhran_with_a_cracked_skin: { minTier: 1, minFloor: 1, weight: 1.1, floorScale: 0.18, tierScale: 0.14 },
+    cloak_of_the_last_call_prophet: { minTier: 2, minFloor: 2, weight: 0.9, floorScale: 0.32, tierScale: 0.42 },
+    bottle_of_rainbow_sediment: { minTier: 2, minFloor: 3, weight: 0.85, floorScale: 0.35, tierScale: 0.45 },
+    ledger_of_near_missed_miracles: { minTier: 2, minFloor: 4, weight: 0.8, floorScale: 0.38, tierScale: 0.5 },
+    silver_spoon_of_the_seventh_pour: { minTier: 3, minFloor: 4, weight: 0.65, floorScale: 0.45, tierScale: 0.58 },
   },
   rare: {
-    "Leprechaun Bail Bond": { minTier: 1, minFloor: 1, weight: 1, floorScale: 0.16, tierScale: 0.14 },
-    "Emerald Poker from the Kindly Folk": { minTier: 2, minFloor: 3, weight: 0.9, floorScale: 0.28, tierScale: 0.36 },
-    "Crown Cork of the Golden Keg": { minTier: 2, minFloor: 3, weight: 0.9, floorScale: 0.26, tierScale: 0.32 },
-    "Fae Toll Bell on a Silk Chain": { minTier: 2, minFloor: 4, weight: 0.8, floorScale: 0.34, tierScale: 0.46 },
-    "Bogfire Lantern of Fortunate Missteps": { minTier: 3, minFloor: 5, weight: 0.7, floorScale: 0.4, tierScale: 0.58 },
-    "Coin Harp String Wound in Moon Gold": { minTier: 3, minFloor: 6, weight: 0.6, floorScale: 0.48, tierScale: 0.64 },
+    leprechaun_bail_bond: { minTier: 1, minFloor: 1, weight: 1, floorScale: 0.16, tierScale: 0.14 },
+    emerald_poker_from_the_kindly_folk: { minTier: 2, minFloor: 3, weight: 0.9, floorScale: 0.28, tierScale: 0.36 },
+    crown_cork_of_the_golden_keg: { minTier: 2, minFloor: 3, weight: 0.9, floorScale: 0.26, tierScale: 0.32 },
+    fae_toll_bell_on_a_silk_chain: { minTier: 2, minFloor: 4, weight: 0.8, floorScale: 0.34, tierScale: 0.46 },
+    bogfire_lantern_of_fortunate_missteps: { minTier: 3, minFloor: 5, weight: 0.7, floorScale: 0.4, tierScale: 0.58 },
+    coin_harp_string_wound_in_moon_gold: { minTier: 3, minFloor: 6, weight: 0.6, floorScale: 0.48, tierScale: 0.64 },
   },
   legendary: {
-    "Receipt from the End of the Rainbow": { minTier: 1, minFloor: 1, weight: 0.9, floorScale: 0.32, tierScale: 0.38 },
-    "The Broker's Blessed Corkscrew": { minTier: 2, minFloor: 5, weight: 0.82, floorScale: 0.36, tierScale: 0.44 },
-    "Clover-Cursed Treasury Seal": { minTier: 3, minFloor: 6, weight: 0.72, floorScale: 0.42, tierScale: 0.54 },
-    "Keg Crown of the Lucky Wake": { minTier: 3, minFloor: 6, weight: 0.68, floorScale: 0.44, tierScale: 0.56 },
-    "Harp String Cut from a Fae Moonbeam": { minTier: 3, minFloor: 7, weight: 0.62, floorScale: 0.5, tierScale: 0.62 },
-    "Final Coin from Saint Brigid's Poker Table": { minTier: 3, minFloor: 8, weight: 0.58, floorScale: 0.56, tierScale: 0.7 },
+    receipt_from_the_end_of_the_rainbow: { minTier: 1, minFloor: 1, weight: 0.9, floorScale: 0.32, tierScale: 0.38 },
+    the_brokers_blessed_corkscrew: { minTier: 2, minFloor: 5, weight: 0.82, floorScale: 0.36, tierScale: 0.44 },
+    clover_cursed_treasury_seal: { minTier: 3, minFloor: 6, weight: 0.72, floorScale: 0.42, tierScale: 0.54 },
+    keg_crown_of_the_lucky_wake: { minTier: 3, minFloor: 6, weight: 0.68, floorScale: 0.44, tierScale: 0.56 },
+    harp_string_cut_from_a_fae_moonbeam: { minTier: 3, minFloor: 7, weight: 0.62, floorScale: 0.5, tierScale: 0.62 },
+    final_coin_from_saint_brigids_poker_table: { minTier: 3, minFloor: 8, weight: 0.58, floorScale: 0.56, tierScale: 0.7 },
   },
 };
 
@@ -60,6 +60,7 @@ export function rollLoot(floor, tier, rooms) {
   const mult = 1 + floor * 0.15 + (tier - 1) * 0.25 + rooms * 0.03;
   return {
     name: item.n,
+    sourceId: item.id,
     value: Math.round(item.v * mult),
     emoji: item.e,
     luck: item.luck || 0,
@@ -82,12 +83,13 @@ function pickWeighted(pool) {
 function getLootMeta(rarity, item) {
   return {
     ...DEFAULT_LOOT_META,
-    ...(LOOT_METADATA[rarity]?.[item.n] || {}),
+    ...(LOOT_METADATA[rarity]?.[item.id] || {}),
   };
 }
 
 export function getLootPoolSnapshot(rarity, floor, tier, rooms) {
-  const pool = LOOT[rarity] || [];
+  const lootPools = getLocalizedLootPools();
+  const pool = lootPools[rarity] || [];
   const eligible = pool
     .map((item) => {
       const meta = getLootMeta(rarity, item);
@@ -116,11 +118,13 @@ export function getLootPoolSnapshot(rarity, floor, tier, rooms) {
  * @returns {{ name: string, emoji: string, hp: number, maxHp: number, atk: number, def: number }}
  */
 export function spawnMonster(floor, tier, rooms) {
+  const monsters = getLocalizedMonsters();
   const et = rooms >= 5 && tier < 3 ? Math.min(3, tier + 1) : tier;
-  const pool = MONSTERS.filter((m) => m.t <= et);
+  const pool = monsters.filter((m) => m.t <= et);
   const t = pick(pool);
   const s = 1 + (floor - 1) * 0.3 + (tier - 1) * 0.4 + rooms * 0.08;
   return {
+    id: t.id,
     name: t.name,
     emoji: t.e,
     hp: Math.round(t.hp * s),

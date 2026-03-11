@@ -1,4 +1,5 @@
 import { LC } from "../data/Defaults.js";
+import { useI18n } from "../i18n/index.jsx";
 
 /**
  * Highlight the latest story beat while keeping recent context visible.
@@ -11,20 +12,23 @@ import { LC } from "../data/Defaults.js";
  */
 export function StoryPanel({
   entries = [],
-  title = "Current Beat",
-  subtitle = "The loudest rumor in the room gets top billing.",
+  title,
+  subtitle,
   compact = false,
 }) {
+  const { t } = useI18n();
   const recentEntries = Array.isArray(entries) ? entries.slice(-4) : [];
   const latest = recentEntries.at(-1) || null;
   const history = recentEntries.slice(0, -1).reverse();
 
   return (
     <div className="rounded-xl border border-emerald-300/15 bg-slate-950/80 p-3 shadow-[0_0_30px_rgba(245,158,11,0.08)]">
-      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-200/80">{title}</p>
-          <p className="text-[11px] text-slate-500">{subtitle}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-200/80">
+            {title || t("ui.panels.storyDefaultTitle")}
+          </p>
+          <p className="text-[11px] text-slate-500">{subtitle || t("ui.panels.storyDefaultSubtitle")}</p>
         </div>
       </div>
       <div className="space-y-2">
@@ -34,7 +38,7 @@ export function StoryPanel({
               {latest.msg}
             </p>
           ) : (
-            <p className="text-sm text-slate-500">The room is quiet, which is never a trustworthy sign.</p>
+            <p className="text-sm text-slate-500">{t("ui.panels.storyEmpty")}</p>
           )}
         </div>
         {history.length > 0 && (

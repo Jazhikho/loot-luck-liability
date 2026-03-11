@@ -1,15 +1,17 @@
 import { getDanger } from "../utils/GameLogic.js";
+import { useI18n } from "../i18n/index.jsx";
 
 /**
  * Danger level meter (bars + label) for current floor.
  * @param {{ floor: number, tier: number, roomCount: number }} props
  */
 export function DangerMeter({ floor, tier, roomCount }) {
+  const { t } = useI18n();
   const d = getDanger(floor, tier, roomCount);
 
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span className="text-slate-500">Omens:</span>
+      <span className="text-slate-500">{t("ui.panels.dangerLabel")}</span>
       <div className="flex gap-0.5">
         {Array.from({ length: 10 }).map((_, index) => {
           let barColor = "bg-slate-700";

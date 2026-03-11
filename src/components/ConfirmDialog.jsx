@@ -1,4 +1,5 @@
 import { Btn } from "./Btn.jsx";
+import { useI18n } from "../i18n/index.jsx";
 
 /**
  * Modal confirmation dialog for destructive or irreversible actions.
@@ -21,6 +22,7 @@ export function ConfirmDialog({
   onCancel,
   tone = "bg-red-600 hover:bg-red-500",
 }) {
+  const { t } = useI18n();
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
@@ -29,7 +31,7 @@ export function ConfirmDialog({
         <p className="mt-2 text-sm leading-relaxed text-gray-300">{body}</p>
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Btn onClick={onCancel} c="bg-gray-700 hover:bg-gray-600">
-            Cancel
+            {t("ui.common.cancel")}
           </Btn>
           <Btn onClick={onConfirm} c={tone}>
             {confirmLabel}

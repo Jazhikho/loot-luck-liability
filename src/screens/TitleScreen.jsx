@@ -1,8 +1,8 @@
 import { useState } from "react";
 import packageInfo from "../../package.json";
-import { GAME_BLURB, GAME_TAGLINE } from "../data/Constants.js";
 import { ToastLayer } from "../components/ToastLayer.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
+import { useI18n } from "../i18n/index.jsx";
 import { LS } from "../utils/Helpers.js";
 
 /**
@@ -10,6 +10,7 @@ import { LS } from "../utils/Helpers.js";
  * @param {{ toasts: Array, continueGame: () => void, newGame: () => void, goProfile: () => void }} props
  */
 export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
+  const { t } = useI18n();
   const hasSave = LS.get("ll_save", null);
   const [confirmNewGame, setConfirmNewGame] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
@@ -27,9 +28,9 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
       <ToastLayer toasts={toasts} />
       <ConfirmDialog
         open={confirmNewGame}
-        title="Abandon the current run?"
-        body="Starting a new run will replace the current in-progress expedition once the next autosave happens."
-        confirmLabel="Start Fresh Run"
+        title={t("ui.title.abandonRunTitle")}
+        body={t("ui.title.abandonRunBody")}
+        confirmLabel={t("ui.title.abandonRunConfirm")}
         onConfirm={() => {
           setConfirmNewGame(false);
           newGame();
@@ -43,51 +44,49 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
             <div className="text-center">
               <div className="mb-4 text-7xl">🍀</div>
               <h1 className="mb-1 bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
-                Loot, Luck &amp; Liability
+                {t("content.title")}
               </h1>
-              <p className="text-sm uppercase tracking-[0.25em] text-emerald-200/70">Credits</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-emerald-200/70">{t("ui.title.creditsLabel")}</p>
             </div>
             <div className="space-y-3 rounded-xl border border-emerald-400/15 bg-slate-950/50 p-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">Dev</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">{t("ui.title.creditsDev")}</p>
                 <p className="text-lg font-bold text-yellow-100">Jazhikho</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">Prototype</p>
-                <p className="text-sm text-slate-300">Originally prototyped with Claude Sonnet.</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">{t("ui.title.creditsPrototype")}</p>
+                <p className="text-sm text-slate-300">{t("ui.title.creditsPrototypeBody")}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">Development</p>
-                <p className="text-sm text-slate-300">Developed using Codex (GPT 5.4).</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">{t("ui.title.creditsDevelopment")}</p>
+                <p className="text-sm text-slate-300">{t("ui.title.creditsDevelopmentBody")}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">Playtesting</p>
-                <p className="text-sm text-slate-300">Joel Croteau, for playtesting and feedback.</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">{t("ui.title.creditsPlaytesting")}</p>
+                <p className="text-sm text-slate-300">{t("ui.title.creditsPlaytestingBody")}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">Version</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">{t("ui.title.creditsVersion")}</p>
                 <p className="text-sm text-slate-300">v{packageInfo.version}</p>
               </div>
-              <p className="text-sm leading-relaxed text-slate-400">
-                A folk-chaos loot run about cursed gold, suspicious luck, and monsters who know the engine is watching.
-              </p>
+              <p className="text-sm leading-relaxed text-slate-400">{t("ui.title.creditsFooter")}</p>
             </div>
             <button
               type="button"
               onClick={() => setShowCredits(false)}
               className="w-full rounded-lg bg-slate-700 px-8 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-600"
             >
-              Back to Title
+              {t("ui.title.backToTitle")}
             </button>
           </div>
         ) : (
           <>
             <div className="mb-4 text-7xl">🍀</div>
             <h1 className="mb-1 bg-gradient-to-r from-emerald-300 via-yellow-100 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
-              Loot, Luck &amp; Liability
+              {t("content.title")}
             </h1>
-            <p className="mb-2 italic text-yellow-100/80">{GAME_TAGLINE}</p>
-            <p className="mb-6 text-sm leading-relaxed text-slate-400">{GAME_BLURB}</p>
+            <p className="mb-2 italic text-yellow-100/80">{t("content.tagline")}</p>
+            <p className="mb-6 text-sm leading-relaxed text-slate-400">{t("content.blurb")}</p>
             <div className="space-y-2">
               {hasSave ? (
                 <>
@@ -96,14 +95,14 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
                     onClick={continueGame}
                     className="w-full rounded-lg bg-emerald-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-emerald-500"
                   >
-                    Continue the Haul
+                    {t("ui.title.continueRun")}
                   </button>
                   <button
                     type="button"
                     onClick={onNewGame}
                     className="w-full rounded-lg bg-cyan-700 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-cyan-600"
                   >
-                    Start a Fresh Misadventure
+                    {t("ui.title.startFresh")}
                   </button>
                 </>
               ) : (
@@ -112,7 +111,7 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
                   onClick={onNewGame}
                   className="w-full rounded-lg bg-emerald-600 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-emerald-500"
                 >
-                  Start Adventuring
+                  {t("ui.title.startAdventure")}
                 </button>
               )}
               <button
@@ -120,14 +119,14 @@ export function TitleScreen({ toasts, continueGame, newGame, goProfile }) {
                 onClick={() => setShowCredits(true)}
                 className="w-full rounded-lg bg-amber-700 px-8 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-600"
               >
-                Credits
+                {t("ui.common.credits")}
               </button>
               <button
                 type="button"
                 onClick={goProfile}
                 className="w-full rounded-lg bg-slate-700 px-8 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-600"
               >
-                Open the Ledger
+                {t("ui.common.openLedger")}
               </button>
             </div>
           </>

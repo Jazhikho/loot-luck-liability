@@ -10,14 +10,9 @@ import { ShopView } from "./screens/ShopView.jsx";
 import { PickDungeonView } from "./screens/PickDungeonView.jsx";
 import { CombatView } from "./screens/CombatView.jsx";
 import { FloorHubView } from "./screens/FloorHubView.jsx";
-import {
-  ACHDEFS,
-  EMPTY_ROOMS,
-  EXPLORE_FLAVOR,
-  GREETINGS,
-  SELL_QUOTES,
-} from "./data/Constants.js";
+import { getAchievementDefs, getEmptyRooms, getExploreFlavor, getGreetingLines, getSellQuotes } from "./data/Content.js";
 import { DEF_LT, DEF_P, DEF_RS } from "./data/Defaults.js";
+import { useI18n } from "./i18n/index.jsx";
 import {
   canUsePotion,
   didReturnFromClearedDungeon,
@@ -59,6 +54,7 @@ function getAfterFightCompletion(afterFight) {
 }
 
 export default function Game() {
+  const { t } = useI18n();
   const [view, setView] = useState("title");
   const [p, setP] = useState(DEF_P);
   const [inv, setInv] = useState([]);
@@ -88,6 +84,10 @@ export default function Game() {
   const deathTimerRef = useRef(null);
 
   const currentLuck = getCurrentLuck(p, inv);
+  const emptyRooms = getEmptyRooms();
+  const exploreFlavor = getExploreFlavor();
+  const greetings = getGreetingLines();
+  const sellQuotes = getSellQuotes();
   const luckyItemCount = getLuckyItemCount(inv);
   const lockedItemCount = getLockedItemCount(inv);
   const sellableTotal = getSellableTotal(inv);
@@ -141,7 +141,7 @@ export default function Game() {
   const tryUnlock = useCallback(
     (id) => {
       if (achRef.current.includes(id)) return;
-      const definition = ACHDEFS.find((entry) => entry.id === id);
+      const definition = getAchievementDefs().find((entry) => entry.id === id);
       if (!definition) return;
 
       const next = [...achRef.current, id];
@@ -175,8 +175,8 @@ export default function Game() {
     setRs(save.rs || DEF_RS);
     rsRef.current = save.rs || DEF_RS;
     setLog(save.log || []);
-    setMQuote(save.view === "shop" ? pick(GREETINGS) : "");
-  }, []);
+    setMQuote(save.view === "shop" ? pick(greetings) : "");
+  }, [greetings]);
 
   const continueGame = useCallback(() => {
     const save = normalizeSave(LS.get("ll_save", null));
@@ -346,13 +346,13 @@ export default function Game() {
     clearPendingDeath();
     setDepartureWarningOpen(false);
     setView("shop");
-    setMQuote(pick(GREETINGS));
+    setMQuote(pick(greetings));
     setDng(null);
     setFl(0);
     setRooms(0);
     setFoe(null);
     setAfterFight(null);
-  }, [clearPendingDeath]);
+  }, [clearPendingDeath, greetings]);
 
   const goProfile = useCallback(() => {
     setPrevView(view);
@@ -390,7 +390,7 @@ export default function Game() {
     updRs({ earned: rsRef.current.earned + total });
     updLt({ gold: newLifetimeGold });
     alog(
-      `You cash in ${sellableItems.length} curios for ${total} gold.${heldCount > 0 ? ` ${heldCount} held item${heldCount === 1 ? "" : "s"} stay tucked away.` : ""} ${pick(SELL_QUOTES)}`,
+      `You cash in ${sellableItems.length} curios for ${total} gold.${heldCount > 0 ? ` ${heldCount} held item${heldCount === 1 ? "" : "s"} stay tucked away.` : ""} ${pick(sellQuotes)}`,
       "gold"
     );
 
@@ -603,7 +603,7 @@ export default function Game() {
     updLt({ rooms: ltRef.current.rooms + 1 });
 
     if (nextRooms >= 8) tryUnlock("thorough");
-    alog(`[Room ${nextRooms}] ${pick(EXPLORE_FLAVOR)}`, "dim");
+    alog(`[Room ${nextRooms}] ${pick(exploreFlavor)}`, "dim");
 
     const monsterChance = 40 + nextRooms * 4 + fl * 2;
     const lootChance = 30 - nextRooms * 1.5;
@@ -652,7 +652,7 @@ export default function Game() {
       return;
     }
 
-    const empty = decorateEmptyRoomOutcome({ baseText: pick(EMPTY_ROOMS) }, currentLuck);
+    const empty = decorateEmptyRoomOutcome({ baseText: pick(emptyRooms) }, currentLuck);
     alog(empty.message, "info");
   };
 
@@ -874,9 +874,9 @@ export default function Game() {
       <ToastLayer toasts={toasts} />
       <ConfirmDialog
         open={departureWarningOpen}
-        title="Leave town while hurt?"
-        body={`You're heading out at ${p.hp}/${p.mhp} HP. Hearth Rest in the snug will refill you before the next run. Leave town hurt anyway?`}
-        confirmLabel="Leave Hurt Anyway"
+        title={t("ui.warnings.leaveTownTitle")}
+        body={t("ui.warnings.leaveTownBody", { hp: p.hp, maxHp: p.mhp })}
+        confirmLabel={t("ui.warnings.leaveTownConfirm")}
         onConfirm={() => {
           setDepartureWarningOpen(false);
           setView("pick");
@@ -888,7 +888,7 @@ export default function Game() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="bg-gradient-to-r from-emerald-300 via-yellow-200 to-amber-300 bg-clip-text text-lg font-bold text-transparent">
-              Loot, Luck &amp; Liability
+              {t("content.title")}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -902,7 +902,7 @@ export default function Game() {
               onClick={goProfile}
               className="text-sm text-emerald-100/60 transition-colors hover:text-yellow-100"
             >
-              Ledger
+              {t("ui.common.ledger")}
             </button>
           </div>
         </div>

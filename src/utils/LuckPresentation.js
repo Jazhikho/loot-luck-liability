@@ -1,3 +1,11 @@
+import { getLocale } from "../i18n/index.jsx";
+import {
+  getDialogueEntries,
+  getDialogueLabel,
+  getLootPrefixLabel,
+  getNestedDialogueEntries,
+} from "../i18n/dialogueResources.js";
+
 const LUCK_TIERS = [
   { key: "grounded", label: "Grounded", max: 1, absurdChance: 0 },
   { key: "fortunate", label: "Fortunate", max: 4, absurdChance: 35 },
@@ -213,7 +221,7 @@ function getTierKey(luck) {
 }
 
 function pickTierText(category, tierKey, seed) {
-  return pickVariant(seed, DIALOGUE_LIBRARY[category][tierKey]);
+  return pickVariant(seed, getDialogueEntries(getLocale(), category, tierKey, DIALOGUE_LIBRARY));
 }
 
 function quoteFor(category, name, salt, luck) {
@@ -228,9 +236,8 @@ function shouldGoAbsurd(luck, seed) {
 }
 
 function getLootPrefix(source) {
-  if (source === "road") return "Found roadside loot:";
-  if (source === "drop") return "Loot dropped:";
-  return "Found loot:";
+  const fallback = source === "road" ? "Found roadside loot:" : source === "drop" ? "Loot dropped:" : "Found loot:";
+  return getLootPrefixLabel(getLocale(), source, fallback);
 }
 
 export function getLuckTier(luck) {
@@ -622,7 +629,12 @@ export function decorateDeathOutcome(outcome, luck) {
   const cause = outcome.cause === "trap" ? "trap" : outcome.cause === "flee" ? "flee" : "combat";
   const seed = `death:${cause}:${outcome.foeName || "none"}:${tierKey}`;
   const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
-  const template = pickVariant(seed, DIALOGUE_LIBRARY.deathNarration[cause][effectiveTier]);
+  const template = pickVariant(
+    seed,
+    getDialogueEntries(getLocale(), `deathNarration.${cause}`, effectiveTier, {
+      [`deathNarration.${cause}`]: DIALOGUE_LIBRARY.deathNarration[cause],
+    })
+  );
   return {
     ...outcome,
     message: formatTemplate(template, { foe: outcome.foeName || "the dungeon" }),
@@ -635,7 +647,7 @@ export function decorateMonsterEncounter(outcome, luck) {
   const quote = quoteFor("encounterQuote", outcome.monster.name, "encounter", luck);
   return {
     ...outcome,
-    encounterTitle: luck >= 8 && shouldGoAbsurd(luck, seed) ? "Lucky Find!" : "",
+    encounterTitle: luck >= 8 && shouldGoAbsurd(luck, seed) ? getDialogueLabel(getLocale(), "luckyFindTitle", "Lucky Find!") : "",
     displayName: outcome.monster.name,
     message: formatTemplate(pickTierText("monsterNarration", tierKey, seed), {
       monster: outcome.monster.name,
@@ -664,7 +676,12 @@ export function decorateTravelOutcome(outcome, luck) {
   const tierKey = getTierKey(luck);
   const seed = `travel:${outcome.kind}:${outcome.item?.name || "none"}:${tierKey}`;
   const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
-  const template = pickVariant(seed, DIALOGUE_LIBRARY.travelNarration[outcome.kind][effectiveTier]);
+  const template = pickVariant(
+    seed,
+    getDialogueEntries(getLocale(), `travelNarration.${outcome.kind}`, effectiveTier, {
+      [`travelNarration.${outcome.kind}`]: DIALOGUE_LIBRARY.travelNarration[outcome.kind],
+    })
+  );
   return {
     ...outcome,
     message: formatTemplate(template, { item: outcome.item?.name || "your cargo" }),
@@ -675,7 +692,16 @@ export function decorateTrapOutcome(outcome, luck) {
   const tierKey = getTierKey(luck);
   const seed = `trap:${outcome.damage}:${outcome.fatal}:${tierKey}`;
   const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
-  const template = pickVariant(seed, DIALOGUE_LIBRARY.trapNarration[effectiveTier][outcome.fatal ? "fatal" : "live"]);
+  const template = pickVariant(
+    seed,
+    getNestedDialogueEntries(
+      getLocale(),
+      "trapNarration",
+      outcome.fatal ? "fatal" : "live",
+      effectiveTier,
+      DIALOGUE_LIBRARY
+    )
+  );
   return {
     ...outcome,
     message: formatTemplate(template, { damage: outcome.damage }),

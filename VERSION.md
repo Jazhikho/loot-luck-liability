@@ -1,5 +1,11 @@
 # Version History
 
+## 1.6.0 - 2026-03-11
+
+- Added a hidden localization scaffold for `en`, `es`, `ru`, `ja`, `ko`, and `zh-Hans` while keeping English as the only visible in-game language.
+- Extracted screen/component UI text and stable content ids behind locale-aware lookup helpers, plus safer font fallbacks for future Cyrillic/CJK support.
+- Added locale fallback coverage for UI copy, content tables, and luck narration without changing current gameplay behavior.
+
 ## 1.5.0 - 2026-03-11
 
 - Greatly expanded the luck-driven comedy text with more varied encounter, attack, death, travel, trap, and empty-room narration.
