@@ -114,7 +114,7 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText(/Codex \(GPT 5\.4\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Joel Croteau/i)).toBeInTheDocument();
     expect(screen.queryByText(/Timbot/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/v1\.7\.0/i)).toBeInTheDocument();
+    expect(screen.getByText(/v1\.7\.1/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Back to Title" }));
     expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();

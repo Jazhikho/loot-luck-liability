@@ -30,6 +30,7 @@ import {
   getLockedItemCount,
   getLuckyItemCount,
   getLuckUpgradeCost,
+  getRoomOutcomeChances,
   getSellableItems,
   getSellableTotal,
   getWeaponUpgradeBenefit,
@@ -613,9 +614,11 @@ export default function Game() {
       if (roomNumber >= 8) tryUnlock("thorough");
       alog(t("ui.gameLog.roomEntry", { room: roomNumber, flavor: pick(exploreFlavor) }), "dim");
 
-      const monsterChance = 40 + roomNumber * 4 + floor * 2;
-      const lootChance = 30 - roomNumber * 1.5;
-      const trapChance = 8 + roomNumber * 2 + dungeon.tier * 2;
+      const { monster: monsterChance, loot: lootChance, trap: trapChance } = getRoomOutcomeChances(
+        floor,
+        dungeon.tier,
+        roomNumber
+      );
       const roll = Math.random() * 100;
 
       if (roll < monsterChance) {

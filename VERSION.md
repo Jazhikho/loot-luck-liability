@@ -1,5 +1,11 @@
 # Version History
 
+## 1.7.1 - 2026-03-11
+
+- Added diminishing returns to repeated room farming on the same floor so shallow endless runs dry up instead of outpaying deeper content.
+- Reworked room outcome weighting so overfarmed floors skew much harder toward empty rooms, monsters, and trouble while legitimate deeper pushes stay rewarding.
+- Flattened the room-based loot quality/value bonus after a floor is effectively picked clean and added regression coverage for the new balance rules.
+
 ## 1.7.0 - 2026-03-11
 
 - Added browser-aware English/Spanish language support with a visible manual override on the title screen and ledger.

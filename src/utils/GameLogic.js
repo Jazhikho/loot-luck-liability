@@ -41,6 +41,46 @@ const DEFAULT_LOOT_META = {
   roomScale: 0.02,
 };
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getRoomPressure(floor, tier, rooms) {
+  const sustainableRooms = 4 + floor + tier;
+  const overfarm = Math.max(0, rooms - sustainableRooms);
+  const effectiveRoomProgress = Math.max(0, Math.min(rooms, sustainableRooms) - overfarm * 1.5);
+  const valueRoomProgress = Math.max(0, Math.min(rooms, sustainableRooms) - overfarm * 1.25);
+  return {
+    sustainableRooms,
+    overfarm,
+    effectiveRoomProgress,
+    valueRoomProgress,
+  };
+}
+
+export function getRoomOutcomeChances(floor, tier, rooms) {
+  const { overfarm } = getRoomPressure(floor, tier, rooms);
+  let monsterChance = 34 + rooms * 3.5 + floor * 2 + tier * 4;
+  let lootChance = 30 + floor * 3 + tier * 5 - rooms * 2 - overfarm * 10;
+  let trapChance = 8 + rooms * 1.5 + tier * 2 + overfarm * 3;
+  let emptyChance = 16 + overfarm * 14 - floor * 1.5;
+
+  monsterChance = Math.max(18, monsterChance);
+  lootChance = clamp(lootChance, 3, 45);
+  trapChance = Math.max(6, trapChance);
+  emptyChance = Math.max(6, emptyChance);
+
+  const total = monsterChance + lootChance + trapChance + emptyChance;
+  const scale = total > 0 ? 100 / total : 1;
+
+  return {
+    monster: monsterChance * scale,
+    loot: lootChance * scale,
+    trap: trapChance * scale,
+    empty: emptyChance * scale,
+  };
+}
+
 /**
  * Roll a loot item based on floor, tier, and rooms explored.
  * @param {number} floor
@@ -50,14 +90,15 @@ const DEFAULT_LOOT_META = {
  */
 export function rollLoot(floor, tier, rooms) {
   const r = Math.random() * 100;
-  const s = floor * 3.2 + tier * 4 + rooms * 0.8;
+  const { effectiveRoomProgress, valueRoomProgress } = getRoomPressure(floor, tier, rooms);
+  const s = floor * 3.2 + tier * 4 + effectiveRoomProgress * 0.8;
   let rarity;
   if (r < 2 + s * 0.85) rarity = "legendary";
   else if (r < 11 + s * 1.45) rarity = "rare";
   else if (r < 34 + s * 1.1) rarity = "uncommon";
   else rarity = "common";
   const item = pickWeighted(getLootPoolSnapshot(rarity, floor, tier, rooms));
-  const mult = 1 + floor * 0.15 + (tier - 1) * 0.25 + rooms * 0.03;
+  const mult = Math.max(0.7, 1 + floor * 0.15 + (tier - 1) * 0.25 + valueRoomProgress * 0.03);
   return {
     name: item.n,
     sourceId: item.id,
@@ -88,6 +129,7 @@ function getLootMeta(rarity, item) {
 }
 
 export function getLootPoolSnapshot(rarity, floor, tier, rooms) {
+  const { effectiveRoomProgress } = getRoomPressure(floor, tier, rooms);
   const lootPools = getLocalizedLootPools();
   const pool = lootPools[rarity] || [];
   const eligible = pool
@@ -106,7 +148,7 @@ export function getLootPoolSnapshot(rarity, floor, tier, rooms) {
       (1 +
         tier * meta.tierScale +
         floor * meta.floorScale +
-        rooms * meta.roomScale),
+        effectiveRoomProgress * meta.roomScale),
   }));
 }
 

@@ -7,6 +7,7 @@ import {
   getLootPoolSnapshot,
   getLuckyItemCount,
   getLuckUpgradeCost,
+  getRoomOutcomeChances,
   getSellableTotal,
   getWeaponUpgradeBenefit,
   rollLoot,
@@ -79,5 +80,38 @@ describe("GameLogic luck helpers", () => {
 
     expect(averageScore(deep)).toBeGreaterThan(averageScore(early));
     expect(deep.some((item) => item.rarity === "common")).toBe(true);
+  });
+
+  it("dries up shallow floor farming while keeping deeper pushes worthwhile", () => {
+    const freshCellar = getRoomOutcomeChances(1, 1, 1);
+    const overfarmedCellar = getRoomOutcomeChances(1, 1, 18);
+    const deeperPush = getRoomOutcomeChances(5, 3, 6);
+
+    expect(overfarmedCellar.loot).toBeLessThan(freshCellar.loot / 4);
+    expect(overfarmedCellar.empty).toBeGreaterThan(freshCellar.empty);
+    expect(deeperPush.loot).toBeGreaterThan(overfarmedCellar.loot);
+  });
+
+  it("stops room count from inflating shallow loot quality forever", () => {
+    let seed = 246813579;
+    const randomSpy = vi.spyOn(Math, "random").mockImplementation(() => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    });
+
+    const rarityScore = { common: 1, uncommon: 2, rare: 3, legendary: 4 };
+    const freshShallow = Array.from({ length: 400 }, () => rollLoot(1, 1, 2));
+    const overfarmedShallow = Array.from({ length: 400 }, () => rollLoot(1, 1, 18));
+    const deep = Array.from({ length: 400 }, () => rollLoot(7, 3, 6));
+    randomSpy.mockRestore();
+
+    const averageScore = (drops) =>
+      drops.reduce((sum, item) => sum + rarityScore[item.rarity], 0) / drops.length;
+    const averageValue = (drops) => drops.reduce((sum, item) => sum + item.value, 0) / drops.length;
+
+    expect(averageScore(overfarmedShallow)).toBeLessThan(averageScore(freshShallow));
+    expect(averageValue(overfarmedShallow)).toBeLessThan(averageValue(freshShallow));
+    expect(averageScore(deep)).toBeGreaterThan(averageScore(overfarmedShallow));
+    expect(averageValue(deep)).toBeGreaterThan(averageValue(overfarmedShallow));
   });
 });
