@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   decorateAttackOutcome,
   decorateDeathOutcome,
+  decorateEmptyRoomOutcome,
   decorateEnemyAttackOutcome,
   decorateEnemyDefeatOutcome,
   decorateLootOutcome,
   decorateMonsterEncounter,
+  decorateTravelOutcome,
+  decorateTrapOutcome,
   getLuckTier,
 } from "./LuckPresentation.js";
 
@@ -26,6 +29,15 @@ describe("LuckPresentation", () => {
     expect(grounded.damage).toBe(7);
     expect(cursed.damage).toBe(7);
     expect(grounded.message).not.toBe(cursed.message);
+  });
+
+  it("keeps narration deterministic for the same input", () => {
+    const resolved = { targetName: "Coin Wraith", damage: 7, highRoll: true };
+
+    expect(decorateAttackOutcome(resolved, 8).message).toBe(decorateAttackOutcome(resolved, 8).message);
+    expect(decorateEnemyAttackOutcome({ attackerName: "Pub Goblin", damage: 4 }, 5).message).toBe(
+      decorateEnemyAttackOutcome({ attackerName: "Pub Goblin", damage: 4 }, 5).message
+    );
   });
 
   it("keeps loot payloads identical across luck tiers", () => {
@@ -68,7 +80,17 @@ describe("LuckPresentation", () => {
 
     expect(encounter.message).toMatch(/Dev|RNG|seed|patch|algorithm/i);
     expect(enemyAttack.message).toMatch(/RNG|Dev|seed|frame|engine|procedural/i);
-    expect(defeat.message).toMatch(/Dev|RNG|patch|analytics|bug report|loading screen/i);
+    expect(defeat.message).toMatch(/Dev|RNG|patch|analytics|metrics|bug report|loading screen/i);
+  });
+
+  it("adds more varied absurd text to travel, traps, and empty rooms at high luck", () => {
+    const travel = decorateTravelOutcome({ kind: "potion" }, 8);
+    const trap = decorateTrapOutcome({ damage: 9, fatal: false }, 8);
+    const empty = decorateEmptyRoomOutcome({ baseText: "Only dust waits here." }, 8);
+
+    expect(travel.message).toMatch(/universe|loading-screen|spawn|destiny|potion/i);
+    expect(trap.message).toMatch(/barrel|stage cue|physics|hardware/i);
+    expect(empty.message).toMatch(/Dev|comedian|reality|hilarious/i);
   });
 
   it("only reframes already-resolved death outcomes", () => {
@@ -86,5 +108,21 @@ describe("LuckPresentation", () => {
     const attack = decorateAttackOutcome({ targetName: "Coin Wraith", damage: 5, highRoll: false }, 0);
 
     expect(attack.message).not.toMatch(/Dev|RNG|patch|seed|analytics|engine/i);
+  });
+
+  it("produces a wider variety of lines across different encounter inputs", () => {
+    const encounterMessages = new Set(
+      ["Pub Goblin", "Coin Wraith", "Bog Lurker", "Fae Debt Collector"].map((name, index) =>
+        decorateMonsterEncounter({ monster: { name }, floor: index + 1, rooms: index + 2 }, 8).message
+      )
+    );
+    const attackMessages = new Set(
+      [4, 5, 6, 7, 8].map((damage, index) =>
+        decorateAttackOutcome({ targetName: `Foe ${index}`, damage, highRoll: true }, 8).message
+      )
+    );
+
+    expect(encounterMessages.size).toBeGreaterThan(2);
+    expect(attackMessages.size).toBeGreaterThan(3);
   });
 });

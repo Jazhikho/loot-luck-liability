@@ -1,5 +1,11 @@
 # Version History
 
+## 1.5.0 - 2026-03-11
+
+- Greatly expanded the luck-driven comedy text with more varied encounter, attack, death, travel, trap, and empty-room narration.
+- Made higher luck tiers escalate harder into surreal, self-aware, and openly fourth-wall-breaking outcomes without changing gameplay balance.
+- Tightened automated coverage around narration variety, determinism, and presentation-only safety.
+
 ## 1.4.1 - 2026-03-10
 
 - Added a playtesting credit for Joel Croteau in the title-screen credits.
