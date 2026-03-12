@@ -1046,11 +1046,10 @@ export default function Game() {
               startRetreat={startRetreat}
               usePot={usePot}
               pendingDeath={pendingDeath}
-              storyEntries={storyEntries}
             />
           )}
         </div>
-        {activeView !== "combat" && activeView !== "floorHub" && <LogBox logRef={logRef} log={log} />}
+        {activeView !== "combat" && <LogBox logRef={logRef} log={log} />}
       </div>
     </div>
   );

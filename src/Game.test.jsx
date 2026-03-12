@@ -228,6 +228,36 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByText(/You trip, recover, and somehow land a perfect hit\./i)).toBeInTheDocument();
   });
 
+  it("uses the main log instead of a separate commentary panel on the floor hub", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 3,
+        view: "floorHub",
+        p: { hp: 42, mhp: 50, atk: 5, def: 2, gold: 10, wlv: 1, alv: 1, pot: 2, luck: 0 },
+        inv: [],
+        dng: getDungeonCatalog([1, 2]).find((dungeon) => dungeon.id === 1),
+        fl: 1,
+        rooms: 2,
+        ef: [1],
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 1, rooms: 2, clears: 0 },
+        log: [{ id: "log-1", msg: "The rainbow mimic sulks in the log where it belongs.", type: "bad" }],
+      })
+    );
+
+    render(<Game />);
+
+    expect(await screen.findByRole("heading", { name: /Floor 1\/3/i })).toBeInTheDocument();
+    const logBox = screen.getByText("Rumors & Wreckage").closest(".rounded-xl");
+
+    expect(logBox).toBeInTheDocument();
+    expect(screen.queryByText("Dungeon Commentary")).not.toBeInTheDocument();
+    expect(within(logBox).getAllByText(/The rainbow mimic sulks in the log where it belongs\./i).length).toBeGreaterThan(0);
+  });
+
   it("buys run luck upgrades at the fixed cost and updates the display", async () => {
     localStorage.setItem(
       "ll_save",

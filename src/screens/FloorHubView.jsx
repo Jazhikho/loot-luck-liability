@@ -1,7 +1,6 @@
 import { Bar } from "../components/Bar.jsx";
 import { Btn } from "../components/Btn.jsx";
 import { DangerMeter } from "../components/DangerMeter.jsx";
-import { StoryPanel } from "../components/StoryPanel.jsx";
 import { useI18n } from "../i18n/index.jsx";
 
 /**
@@ -19,7 +18,6 @@ import { useI18n } from "../i18n/index.jsx";
  *   startRetreat: (d: Object) => void,
  *   usePot: () => void,
  *   pendingDeath?: { message: string } | null,
- *   storyEntries?: Array<{ msg: string, type: string, id?: string | number }>,
  * }} props
  */
 export function FloorHubView({
@@ -35,7 +33,6 @@ export function FloorHubView({
   startRetreat,
   usePot,
   pendingDeath = null,
-  storyEntries = [],
 }) {
   const { t } = useI18n();
   const invTotal = inv.reduce((sum, item) => sum + item.value, 0);
@@ -51,7 +48,7 @@ export function FloorHubView({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <div className="shrink-0 space-y-3">
+      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
         <div className="text-center">
           <h2 className="text-lg font-bold text-yellow-100">
             {dng.e} {t("ui.floorHub.floorLabel", { floor: fl, total: dng.floors })}
@@ -67,15 +64,6 @@ export function FloorHubView({
           <p className="text-xs text-emerald-300">{t("ui.floorHub.activeLuck", { luck: currentLuck, tier: tierLabel })}</p>
         </div>
         <p className="text-center text-xs italic text-slate-400">{hint}</p>
-      </div>
-      <StoryPanel
-        entries={storyEntries}
-        title={t("ui.floorHub.commentaryTitle")}
-        subtitle={t("ui.floorHub.commentarySubtitle")}
-        compact
-        className="min-h-0 flex-1"
-      />
-      <div className="shrink-0 space-y-3">
         {pendingDeath && (
           <div className="mx-auto max-w-sm rounded-lg border border-rose-400/50 bg-rose-950/70 px-3 py-2 text-center text-xs font-bold text-rose-100">
             {pendingDeath.message}

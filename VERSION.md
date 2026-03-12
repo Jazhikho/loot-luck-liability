@@ -1,5 +1,10 @@
 # Version History
 
+## 1.7.1.3 - 2026-03-11
+
+- Removed the separate floor-only `Dungeon Commentary` panel and routed floor narration through the main `Rumors & Wreckage` log instead.
+- Fixed the stale post-combat floor-view story leak and added regression coverage for floor-hub log rendering.
+
 ## 1.7.1.2 - 2026-03-11
 
 - Replaced the server-only mojibake repair path with a browser-safe UTF-8 decoder so the web build no longer crashes on startup.
