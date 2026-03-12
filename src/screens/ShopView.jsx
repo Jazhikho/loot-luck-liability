@@ -2,6 +2,7 @@ import { Btn } from "../components/Btn.jsx";
 import { getLootName } from "../data/Content.js";
 import { RC } from "../data/Defaults.js";
 import { useI18n } from "../i18n/index.jsx";
+import { getTownDepartureState } from "../utils/GameLogic.js";
 
 /**
  * Broker's snug: sell cargo, buy supplies, run upgrades, and head out.
@@ -21,7 +22,6 @@ import { useI18n } from "../i18n/index.jsx";
  *   upgCost: (lvl: number) => number,
  *   luckCost: number,
  *   currentLuck: number,
- *   luckBand: { key: string, label: string },
  *   nextLuckBand: { key: string, label: string, min: number } | null,
  *   luckyItemCount: number,
  *   sellableTotal: number,
@@ -46,7 +46,6 @@ export function ShopView({
   upgCost,
   luckCost,
   currentLuck,
-  luckBand,
   nextLuckBand,
   luckyItemCount,
   sellableTotal,
@@ -56,6 +55,11 @@ export function ShopView({
 }) {
   const { t } = useI18n();
   const invTotal = inv.reduce((sum, item) => sum + item.value, 0);
+  const townDepartureState = getTownDepartureState(p);
+  const departureTone =
+    townDepartureState === "critical"
+      ? "border-rose-500/30 bg-rose-950/40 text-rose-100"
+      : "border-amber-400/30 bg-amber-950/30 text-amber-100";
 
   return (
     <div className="h-full overflow-y-auto pr-1">
@@ -68,15 +72,13 @@ export function ShopView({
             {t("ui.shop.luckSummary", { baseLuck: p.luck, activeLuck: currentLuck, luckyCargo: luckyItemCount })}
           </p>
           <p className="mt-1 text-xs text-emerald-200/80">
-            {nextLuckBand
-              ? t("ui.shop.luckBand", { band: t(`ui.luckTier.${luckBand.key}`) || luckBand.label, next: nextLuckBand.min })
-              : t("ui.shop.luckBandMax", { band: t(`ui.luckTier.${luckBand.key}`) || luckBand.label })}
+            {nextLuckBand ? t("ui.shop.luckBand", { next: nextLuckBand.min }) : t("ui.shop.luckBandMax")}
           </p>
         </div>
-        {p.hp < p.mhp && (
-          <div className="rounded-xl border border-rose-500/30 bg-rose-950/40 px-3 py-3 text-sm text-rose-100">
-            <p className="font-semibold">{t("ui.shop.hurtTitle")}</p>
-            <p className="mt-1 text-xs text-rose-100/80">{t("ui.shop.hurtBody", { hp: p.hp, maxHp: p.mhp })}</p>
+        {townDepartureState && (
+          <div className={`rounded-xl border px-3 py-3 text-sm ${departureTone}`}>
+            <p className="font-semibold">{t(`ui.shop.${townDepartureState}Title`)}</p>
+            <p className="mt-1 text-xs opacity-80">{t(`ui.shop.${townDepartureState}Body`, { hp: p.hp, maxHp: p.mhp })}</p>
           </div>
         )}
         <div className="grid grid-cols-2 gap-2">

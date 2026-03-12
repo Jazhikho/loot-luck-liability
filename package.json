@@ -2,7 +2,7 @@
   "name": "loot-and-liability",
   "private": true,
   "version": "1.8.0",
-  "appVersion": "1.8.0.1",
+  "appVersion": "1.8.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",

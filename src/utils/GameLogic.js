@@ -324,7 +324,19 @@ export function getCombatWarningState(player, foe) {
   if (!player || !foe) return "";
   const maxHit = getMaxIncomingDamage(foe, player);
   if (player.hp <= maxHit) return "lethal";
-  if (player.hp <= Math.max(Math.ceil(player.mhp * 0.25), maxHit * 2)) return "risky";
+  return "";
+}
+
+/**
+ * Departure warning severity while still in town.
+ * @param {{ hp: number, mhp: number } | null} player
+ * @returns {"critical" | "caution" | ""}
+ */
+export function getTownDepartureState(player) {
+  if (!player || !player.mhp) return "";
+  const ratio = player.hp / player.mhp;
+  if (ratio < 0.5) return "critical";
+  if (ratio < 0.75) return "caution";
   return "";
 }
 

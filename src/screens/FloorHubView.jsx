@@ -12,7 +12,6 @@ import { useI18n } from "../i18n/index.jsx";
  *   p: Object,
  *   inv: Array,
  *   currentLuck: number,
- *   luckTier: { label: string },
  *   enterFloor: (n: number, d: Object) => void,
  *   exploreRoom: () => void,
  *   startRetreat: (d: Object) => void,
@@ -27,7 +26,6 @@ export function FloorHubView({
   p,
   inv,
   currentLuck,
-  luckTier,
   enterFloor,
   exploreRoom,
   startRetreat,
@@ -36,7 +34,6 @@ export function FloorHubView({
 }) {
   const { t } = useI18n();
   const invTotal = inv.reduce((sum, item) => sum + item.value, 0);
-  const tierLabel = t(`ui.luckTier.${luckTier.key}`) || luckTier.label;
   const floorTradeoff =
     fl >= dng.floors
       ? t("ui.floorHub.bottomHint")
@@ -61,7 +58,7 @@ export function FloorHubView({
           <div className="w-full max-w-xs">
             <Bar cur={p.hp} max={p.mhp} label={t("ui.combat.yourHp")} />
           </div>
-          <p className="text-xs text-emerald-300">{t("ui.floorHub.activeLuck", { luck: currentLuck, tier: tierLabel })}</p>
+          <p className="text-xs text-emerald-300">{t("ui.floorHub.activeLuck", { luck: currentLuck })}</p>
         </div>
         <p className="text-center text-xs italic text-slate-400">{hint}</p>
         {pendingDeath && (

@@ -355,6 +355,221 @@ const QUOTE_TEMPLATES = {
   },
 };
 
+const QUOTE_LINE_EXTRAS = {
+  en: {
+    encounterQuote: {
+      grounded: [
+        "I was having a perfectly respectable complaint about damp ceilings in {place} until you arrived.",
+        "Before this turns violent, know that {prop} was doing fine without your opinion.",
+        "Bad news from {place}: you are now the loudest problem in it.",
+        "I had just sat down to hate {gripe} in peace.",
+      ],
+      fortunate: [
+        "You walk in glowing like a clerical error and I already resent the paperwork.",
+        "The weather over {place} was bad enough before your luck joined the conversation.",
+        "You have the look of somebody who wins arguments by surviving them accidentally.",
+        "A bird just flew past and booed me. That feels related to you somehow.",
+      ],
+      uncanny: [
+        "I had a whole speech ready, but the RNG is clearly freelancing again.",
+        "Breaking news from {place}: local encounter realizes it was generated for content.",
+        "If you hear a clicking sound, that is the seed loading contempt.",
+        "I was promised a routine shift and instead got patch-note energy in boots.",
+      ],
+      "clover-cursed": [
+        "A fake patch note just floated through {place} and called this matchup 'educational.'",
+        "The Dev does not even respect me enough to pretend this is subtle anymore.",
+        "I just remembered weather used to be local before your luck turned it cinematic.",
+        "Somewhere offscreen, QA muttered 'well, that's going in the reel.'",
+      ],
+    },
+    hurtQuote: {
+      grounded: [
+        "That interrupted a completely unrelated grudge I was enjoying.",
+        "I had just remembered where I left {prop}, and now that thought is gone.",
+        "You hit like unpaid rent collected before breakfast.",
+        "That was rude enough to become tavern news by dusk.",
+      ],
+      fortunate: [
+        "You looked confused all the way through that and it still worked.",
+        "That had the smug rhythm of a coin landing on its edge.",
+        "Even the draft in {place} leaned in to help you there.",
+        "I dislike how your mistakes keep arriving with excellent timing.",
+      ],
+      uncanny: [
+        "That felt less like a hit and more like a patch being applied to my skeleton.",
+        "Wonderful. My bones are now participating in procedural comedy.",
+        "The frame data put its thumb on the scale and called it destiny.",
+        "I heard a menu click somewhere inside that impact.",
+      ],
+      "clover-cursed": [
+        "You hit me so hard I briefly remembered patch notes that have not been written yet.",
+        "The universe just subtitled my pain and I hate the presentation values.",
+        "That landed with the confidence of a bug the Dev secretly likes.",
+        "A popup in my head just said THIS WOULD HAVE TESTED WELL.",
+      ],
+    },
+    enemyAttackQuote: {
+      grounded: [
+        "This swing has nothing to do with you and everything to do with my morning.",
+        "I blame the weather, the floor plan, and then your ribs.",
+        "You happened to be standing where my patience ran out.",
+        "This is what passes for customer service in {place}.",
+      ],
+      fortunate: [
+        "If luck can improvise for you, it can improvise around this hit too.",
+        "I am not trying to win, merely to worsen your travel story.",
+        "This blow is dedicated to every coin toss that kept choosing your side.",
+        "You look like the kind of person who should be charged extra for surviving.",
+      ],
+      uncanny: [
+        "Tonight's forecast for {place}: resentment with a chance of frame-perfect violence.",
+        "The seed wanted a dramatic beat, and unfortunately I am the prop with elbows.",
+        "I am attacking because the algorithm said the scene lacked texture.",
+        "This move tested well with focus groups composed entirely of liars.",
+      ],
+      "clover-cursed": [
+        "Current events update: my attack animation has achieved sentience and demands screen time.",
+        "The Dev called this move 'good enough for shipping' and now we both suffer for it.",
+        "This strike is sponsored by cursed variance and one overworked intern.",
+        "If this lands, the weather in {place} will start acting smug about it.",
+      ],
+    },
+    defeatQuote: {
+      grounded: [
+        "If anyone asks, tell them I lost because the floor was morally against me.",
+        "Please water {prop} for me. It has seen too much.",
+        "I had more to say, but apparently dying is very schedule-intensive.",
+        "Put in the papers that I opposed {gripe} to the end.",
+      ],
+      fortunate: [
+        "I lost to someone who still looks like they need the controls explained.",
+        "This is what happens when coincidence gets union protections.",
+        "Tell fortune I said this outcome had ugly handwriting.",
+        "I hope a witness writes this down badly enough to spare my reputation.",
+      ],
+      uncanny: [
+        "Please tell the coroner this was caused by narrative tampering.",
+        "Some invisible producer just yelled 'great take' over my last breath.",
+        "I am dying in a way that suggests the engine has favorites.",
+        "File this under weather, sabotage, and suspiciously polished comedy.",
+      ],
+      "clover-cursed": [
+        "I would complain to the Dev, but this feels like the sort of note they would frame.",
+        "The postmortem is going to call this 'fun emergent texture,' and I refuse.",
+        "I can already hear a stream chat inventing nicknames for this death.",
+        "Please log that I was defeated by vibes, tooltips, and one extremely committed bit.",
+      ],
+    },
+  },
+  es: {
+    encounterQuote: {
+      grounded: [
+        "Yo estaba teniendo una queja perfectamente seria sobre el techo humedo de {place} hasta que llegaste.",
+        "Antes de que esto se vuelva violento, que conste que {prop} estaba mejor sin tu criterio.",
+        "Ultima hora en {place}: ahora tu eres el problema mas ruidoso.",
+        "Justo me habia sentado a odiar {gripe} en paz.",
+      ],
+      fortunate: [
+        "Llegas brillando como error administrativo y ya me imagino el papeleo.",
+        "Bastante feo estaba el clima en {place} como para que encima aparezca tu suerte.",
+        "Tienes pinta de ganar discusiones sobreviviendolas de casualidad.",
+        "Paso un pajaro, me abucheo y sospecho que fue culpa tuya.",
+      ],
+      uncanny: [
+        "Yo tenia un discurso listo, pero el RNG vuelve a hacer extras sin cobrar.",
+        "Flash de noticias desde {place}: un encuentro local descubre que fue generado por contenido.",
+        "Si oyes un chasquido, es la semilla cargando desprecio.",
+        "Me prometieron un turno tranquilo y en vez de eso llego energia de notas del parche con botas.",
+      ],
+      "clover-cursed": [
+        "Acaba de pasar una nota del parche falsa por {place} y llamo a esto 'didactico'.",
+        "El Dev ya ni me respeta lo bastante como para fingir que esto es sutil.",
+        "Justo recorde cuando el clima era local, antes de que tu suerte lo volviera cinematografico.",
+        "En algun lado QA acaba de murmurar 'si, esto va al compilado'.",
+      ],
+    },
+    hurtQuote: {
+      grounded: [
+        "Eso interrumpio un rencor totalmente ajeno que yo estaba disfrutando.",
+        "Justo habia recordado donde deje {prop} y ahora esa idea se murio.",
+        "Pegas como alquiler atrasado cobrado antes del desayuno.",
+        "Eso fue tan grosero que va a ser noticia de taberna antes de la noche.",
+      ],
+      fortunate: [
+        "Tenias cara de no entender nada y aun asi te salio bien.",
+        "Eso tuvo el ritmo arrogante de una moneda cayendo de canto.",
+        "Hasta la corriente de aire de {place} se inclino para ayudarte.",
+        "Me molesta lo bien que les salen tus errores.",
+      ],
+      uncanny: [
+        "Eso se sintio menos como golpe y mas como parche aplicado al esqueleto.",
+        "Estupendo. Mis huesos ahora participan en comedia procedural.",
+        "La frame data metio el pulgar en la balanza y lo llamo destino.",
+        "Juro que escuche un clic de menu dentro de ese impacto.",
+      ],
+      "clover-cursed": [
+        "Me pegaste tan fuerte que recorde notas del parche que todavia no existen.",
+        "El universo acaba de subtitular mi dolor y detesto la produccion.",
+        "Eso impacto con la confianza de un bug que al Dev le cae simpatico.",
+        "Me acaba de saltar un cartel mental que dice ESTO TESTEO BIEN.",
+      ],
+    },
+    enemyAttackQuote: {
+      grounded: [
+        "Este golpe no tiene tanto que ver contigo como con mi manana.",
+        "Yo le echo la culpa al clima, al plano y despues a tus costillas.",
+        "Tuviste la mala suerte de estar parado donde se me acabo la paciencia.",
+        "Asi es como se entiende la atencion al cliente en {place}.",
+      ],
+      fortunate: [
+        "Si la suerte improvisa para ti, tambien puede improvisar alrededor de este golpe.",
+        "No intento ganar; apenas intento empeorar tu relato del viaje.",
+        "Este porrazo va dedicado a cada moneda al aire que te eligio a vos.",
+        "Tienes pinta de persona a la que deberian cobrarle extra por sobrevivir.",
+      ],
+      uncanny: [
+        "Pronostico para {place}: resentimiento con chances de violencia frame-perfect.",
+        "La semilla queria un momento dramatico y lamentablemente yo soy el accesorio con codos.",
+        "Ataco porque el algoritmo dijo que a la escena le faltaba textura.",
+        "Este movimiento testeaba bien con focus groups integrados por mentirosos.",
+      ],
+      "clover-cursed": [
+        "Boletin de ultima hora: mi animacion de ataque ya tiene conciencia y exige tiempo en pantalla.",
+        "El Dev llamo a este golpe 'suficientemente listo para salir' y ahora los dos pagamos el precio.",
+        "Este ataque lo patrocina la varianza maldita y un pasante agotado.",
+        "Si esto entra, hasta el clima de {place} se va a poner sobrador.",
+      ],
+    },
+    defeatQuote: {
+      grounded: [
+        "Si preguntan, di que perdi porque el piso estaba moralmente en mi contra.",
+        "Por favor regale agua a {prop}. Ha visto demasiado.",
+        "Tenia mas para decir, pero morirse consume una barbaridad de agenda.",
+        "Que conste en actas que me opuse a {gripe} hasta el final.",
+      ],
+      fortunate: [
+        "Perdi contra alguien que todavia parece necesitar el manual.",
+        "Asi termina todo cuando la coincidencia consigue respaldo sindical.",
+        "Dile a la fortuna que este resultado tenia una letra espantosa.",
+        "Ojala algun testigo lo cuente mal y me salve la reputacion.",
+      ],
+      uncanny: [
+        "Por favor dile al forense que esto fue manipulacion narrativa.",
+        "Alguna produccion invisible acaba de gritar 'gran toma' encima de mi ultimo suspiro.",
+        "Me estoy muriendo de una forma que sugiere favoritismos del motor.",
+        "Archivalo bajo clima, sabotaje y comedia demasiado bien lustrada.",
+      ],
+      "clover-cursed": [
+        "Se lo reclamaria al Dev, pero esto tiene demasiada pinta de nota que enmarcaria.",
+        "El postmortem va a llamar a esto 'textura emergente divertida' y me niego.",
+        "Ya puedo oir un chat inventando apodos para esta muerte.",
+        "Deja asentado que me derroto un clima raro, tooltips y un chiste peligrosamente comprometido.",
+      ],
+    },
+  },
+};
+
 function replaceTemplate(text, values) {
   return text.replace(/\{([^}]+)\}/g, (_, key) => `${values[key] ?? ""}`);
 }
@@ -362,6 +577,7 @@ function replaceTemplate(text, values) {
 function buildMonsterQuoteLibrary(localeId) {
   const localeTemplates = QUOTE_TEMPLATES[localeId];
   const profiles = MONSTER_PROFILES[localeId];
+  const localeExtras = QUOTE_LINE_EXTRAS[localeId] || {};
   return Object.fromEntries(
     Object.entries(profiles).map(([monsterId, profile]) => [
       monsterId,
@@ -369,12 +585,13 @@ function buildMonsterQuoteLibrary(localeId) {
         Object.entries(localeTemplates).map(([category, tiers]) => [
           category,
           Object.fromEntries(
-            Object.entries(tiers).map(([tierKey, config]) => [
-              tierKey,
-              config.patterns.flatMap((pattern) =>
+            Object.entries(tiers).map(([tierKey, config]) => {
+              const directLines = (localeExtras[category]?.[tierKey] || []).map((line) => replaceTemplate(line, profile));
+              const composedLines = config.patterns.flatMap((pattern) =>
                 config.tails.map((tail) => replaceTemplate(`${pattern} ${tail}`, profile))
-              ),
-            ])
+              );
+              return [tierKey, [...new Set([...directLines, ...composedLines])]];
+            })
           ),
         ])
       ),

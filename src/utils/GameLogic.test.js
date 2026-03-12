@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   getArmorUpgradeBenefit,
   getCombatWarning,
+  getCombatWarningState,
   getCurrentLuck,
   getLockedItemCount,
   getLootPoolSnapshot,
@@ -9,6 +10,7 @@ import {
   getLuckUpgradeCost,
   getRoomOutcomeChances,
   getSellableTotal,
+  getTownDepartureState,
   getWeaponUpgradeBenefit,
   rollLoot,
 } from "./GameLogic.js";
@@ -43,10 +45,18 @@ describe("GameLogic luck helpers", () => {
     expect(getSellableTotal(inventory)).toBe(25);
   });
 
-  it("returns the stronger upgrade bundles and lethal combat warnings", () => {
+  it("returns the stronger upgrade bundles and only warns in combat when the foe can actually kill you", () => {
     expect(getWeaponUpgradeBenefit()).toEqual({ atk: 4 });
     expect(getArmorUpgradeBenefit()).toEqual({ def: 3, hp: 6 });
     expect(getCombatWarning({ hp: 6, mhp: 50, def: 2 }, { atk: 6 })).toMatch(/ends this run/i);
+    expect(getCombatWarningState({ hp: 7, mhp: 50, def: 2 }, { atk: 6 })).toBe("");
+  });
+
+  it("uses yellow and red town departure thresholds at seventy-five and fifty percent", () => {
+    expect(getTownDepartureState({ hp: 50, mhp: 50 })).toBe("");
+    expect(getTownDepartureState({ hp: 37, mhp: 50 })).toBe("caution");
+    expect(getTownDepartureState({ hp: 25, mhp: 50 })).toBe("caution");
+    expect(getTownDepartureState({ hp: 24, mhp: 50 })).toBe("critical");
   });
 
   it("opens deeper, higher-tier loot within a rarity while keeping earlier loot eligible", () => {

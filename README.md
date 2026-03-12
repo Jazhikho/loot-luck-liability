@@ -20,7 +20,7 @@ The game will try to auto-detect a supported browser language on first launch. P
 
 ## Current Release
 
-- App version: 1.8.0.1
+- App version: 1.8.0.2
 
 ## Links
 

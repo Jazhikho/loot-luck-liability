@@ -30,6 +30,7 @@ import {
   getLockedItemCount,
   getLuckyItemCount,
   getLuckUpgradeCost,
+  getTownDepartureState,
   getRoomOutcomeChances,
   getSellableItems,
   getSellableTotal,
@@ -100,6 +101,7 @@ export default function Game() {
   const narrationSequenceRef = useRef(0);
 
   const currentLuck = getCurrentLuck(p, inv);
+  const townDepartureState = getTownDepartureState(p);
   const emptyRooms = getEmptyRooms();
   const exploreFlavor = getExploreFlavor();
   const greetings = getGreetingLines();
@@ -374,6 +376,7 @@ export default function Game() {
           recent: storyEntries.map((entry) => entry.msg),
         },
         departureWarningOpen,
+        townDepartureState,
         forcedEntryActive: getAfterFightForcedEntry(afterFight),
         enteredFloors,
         runStats: rs,
@@ -384,7 +387,7 @@ export default function Game() {
       delete window.render_game_to_text;
       delete window.advanceTime;
     };
-  }, [view, p, inv, dng, fl, rooms, enteredFloors, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier, nextLuckBand, log, departureWarningOpen, locale, localeSource, afterFight, t]);
+  }, [view, p, inv, dng, fl, rooms, enteredFloors, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier, nextLuckBand, log, departureWarningOpen, townDepartureState, locale, localeSource, afterFight, t]);
 
   const recordHs = useCallback(() => {
     const entry = {
@@ -988,13 +991,13 @@ export default function Game() {
   };
 
   const openDungeonPicker = useCallback(() => {
-    if (p.hp >= p.mhp) {
+    if (townDepartureState !== "critical") {
       setDepartureWarningOpen(false);
       setView("pick");
       return;
     }
     setDepartureWarningOpen(true);
-  }, [p.hp, p.mhp]);
+  }, [townDepartureState]);
 
   const activeView =
     view === "combat" && !foe ? (dng ? "floorHub" : "shop") : view === "floorHub" && !dng ? "shop" : view;
@@ -1079,7 +1082,6 @@ export default function Game() {
               upgCost={upgCost}
               luckCost={getLuckUpgradeCost(p.luck)}
               currentLuck={currentLuck}
-              luckBand={luckTier}
               nextLuckBand={nextLuckBand}
               luckyItemCount={luckyItemCount}
               sellableTotal={sellableTotal}
@@ -1118,7 +1120,6 @@ export default function Game() {
               p={p}
               inv={inv}
               currentLuck={currentLuck}
-              luckTier={luckTier}
               enterFloor={enterFloor}
               exploreRoom={exploreRoom}
               startRetreat={startRetreat}

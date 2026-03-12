@@ -1,5 +1,11 @@
 # Version History
 
+## 1.8.0.2 - 2026-03-11
+
+- Removed the visible current luck-band label from the player-facing luck summaries while keeping the underlying presentation bands active.
+- Greatly expanded monster quote pools and generic combat narration variety, with broader topic spread so repeated actions stop cycling through near-identical lines.
+- Tightened danger warnings so combat only flags lethal incoming turns, while town departure warnings now advise below 75% HP and hard-stop departures only below 50%.
+
 ## 1.8.0.1 - 2026-03-11
 
 - Fixed combat and encounter narration rotation so repeated actions draw from the dialogue pool instead of reusing the same line back-to-back.

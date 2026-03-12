@@ -72,12 +72,15 @@ export const EN_UI = {
   },
   shop: {
     heading: "The Broker's Snug",
-    hurtTitle: "You are still hurt.",
-    hurtBody:
+    criticalTitle: "You are still hurt.",
+    criticalBody:
       "HP {hp}/{maxHp}. If you leave town like this, the Green Dark gets first swing. Hearth Rest restores you to full before the next dive.",
+    cautionTitle: "You are heading out a little light.",
+    cautionBody:
+      "HP {hp}/{maxHp}. You can leave if you want, but this is the range where a sensible fool buys more tonics first.",
     luckSummary: "Base Luck {baseLuck}. Active Luck {activeLuck}. Lucky cargo in hand: {luckyCargo}.",
-    luckBand: "Current band: {band}. Next at {next}.",
-    luckBandMax: "Current band: {band}. Fortune has stopped pretending there is a ceiling.",
+    luckBand: "The next luck threshold kicks in at {next}.",
+    luckBandMax: "Fortune has stopped pretending there is a ceiling.",
     cashIn: "Cash In ({gold}g)",
     tonic: "Tonic (15g)",
     weaponLevel: "Weapon Lv{level}",
@@ -121,7 +124,7 @@ export const EN_UI = {
   floorHub: {
     floorLabel: "Floor {floor}/{total}",
     roomsSearched: "Rooms searched: {count}",
-    activeLuck: "Active Luck: {luck} ({tier})",
+    activeLuck: "Active Luck: {luck}",
     bottomHint: "This is the bottom. The payouts are best here, and so are the ways to die.",
     depthHint: "Staying high is safer. Going deeper pays better and hits harder.",
     hintDefault: "The corridors fork ahead, all damp stone and clover rot.",

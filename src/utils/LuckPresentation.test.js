@@ -40,13 +40,13 @@ describe("LuckPresentation", () => {
     expect(getLuckTier(185).key).toBe("luck-event-horizon");
   });
 
-  it("gives every monster at least ten lines per monster-driven event pool", () => {
+  it("gives every monster at least fifteen lines per monster-driven event pool", () => {
     for (const localeId of ["en", "es"]) {
       const monsters = dialogueResources[localeId].monsterQuotes;
       for (const [monsterId, quoteSet] of Object.entries(monsters)) {
         for (const category of MONSTER_EVENT_CATEGORIES) {
           for (const tierKey of ["grounded", "fortunate", "uncanny", "clover-cursed"]) {
-            expect(quoteSet[category][tierKey].length, `${localeId}:${monsterId}:${category}:${tierKey}`).toBeGreaterThanOrEqual(10);
+            expect(quoteSet[category][tierKey].length, `${localeId}:${monsterId}:${category}:${tierKey}`).toBeGreaterThanOrEqual(15);
           }
         }
       }

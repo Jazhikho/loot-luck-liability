@@ -75,13 +75,16 @@ const ES_UI = {
   },
   shop: {
     heading: "La Tasca del Corredor",
-    hurtTitle: "Sigues herido.",
-    hurtBody:
+    criticalTitle: "Sigues herido.",
+    criticalBody:
       "PV {hp}/{maxHp}. Si sales del pueblo asi, la Oscuridad Verde pega primero. Descansar en el hogar te deja al maximo antes de la proxima bajada.",
+    cautionTitle: "Estas por salir bastante tocado.",
+    cautionBody:
+      "PV {hp}/{maxHp}. Puedes salir si quieres, pero este es el rango en el que hasta un necio sensato compra mas tonicos primero.",
     luckSummary:
       "Suerte base {baseLuck}. Suerte activa {activeLuck}. Carga afortunada en mano: {luckyCargo}.",
-    luckBand: "Banda actual: {band}. La proxima llega en {next}.",
-    luckBandMax: "Banda actual: {band}. La fortuna ya dejo de fingir que existe techo.",
+    luckBand: "La siguiente marca de suerte llega en {next}.",
+    luckBandMax: "La fortuna ya dejo de fingir que existe techo.",
     cashIn: "Cobrar ({gold}g)",
     tonic: "Tonico (15g)",
     weaponLevel: "Arma Nv{level}",
@@ -127,7 +130,7 @@ const ES_UI = {
   floorHub: {
     floorLabel: "Piso {floor}/{total}",
     roomsSearched: "Cuartos registrados: {count}",
-    activeLuck: "Suerte activa: {luck} ({tier})",
+    activeLuck: "Suerte activa: {luck}",
     bottomHint: "Este es el fondo. Aqui pagan mejor, y tambien aqui te matan mejor.",
     depthHint: "Quedarte arriba es mas seguro. Bajar mas hondo paga mejor y pega mas fuerte.",
     hintDefault: "Los pasillos se bifurcan entre piedra humeda y podredumbre de trebol.",
@@ -351,8 +354,8 @@ const ES_CONTENT = {
 const ES_LA_OVERRIDES = {
   ui: {
     shop: {
-      hurtTitle: "Sigues herido.",
-      hurtBody:
+      criticalTitle: "Sigues herido.",
+      criticalBody:
         "PV {hp}/{maxHp}. Si sales del pueblo asi, la Oscuridad Verde pega primero. Descansar en el hogar te deja al maximo antes de la proxima bajada.",
     },
     gameLog: {
@@ -380,8 +383,8 @@ const ES_AR_OVERRIDES = {
     },
     shop: {
       heading: "La Tasca del Corredor",
-      hurtTitle: "Seguis herido.",
-      hurtBody:
+      criticalTitle: "Seguis herido.",
+      criticalBody:
         "PV {hp}/{maxHp}. Si salis del pueblo asi, la Oscuridad Verde pega primero. Descansar en el hogar te deja al maximo antes de la proxima bajada.",
       chaseDark: "Mandarse a la Oscuridad Verde",
     },

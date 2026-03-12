@@ -74,12 +74,15 @@ const PT_BR_RESOURCE = deepMerge(EN_RESOURCE, {
     },
     shop: {
       heading: "A Taverna do Corretor",
-      hurtTitle: "Voce ainda esta ferido.",
-      hurtBody:
+      criticalTitle: "Voce ainda esta ferido.",
+      criticalBody:
         "HP {hp}/{maxHp}. Se sair da cidade assim, a Escuridao Verde bate primeiro. Descansar na lareira te deixa cheio antes da proxima descida.",
+      cautionTitle: "Voce vai sair meio no limite.",
+      cautionBody:
+        "HP {hp}/{maxHp}. Da para sair, mas esta e a faixa em que um tolo sensato compra mais tonicos antes de arriscar.",
       luckSummary: "Sorte base {baseLuck}. Sorte ativa {activeLuck}. Carga sortuda na mao: {luckyCargo}.",
-      luckBand: "Faixa atual: {band}. A proxima chega em {next}.",
-      luckBandMax: "Faixa atual: {band}. A fortuna parou de fingir que existe teto.",
+      luckBand: "A proxima marca de sorte chega em {next}.",
+      luckBandMax: "A fortuna parou de fingir que existe teto.",
       cashIn: "Vender Tudo ({gold}g)",
       tonic: "Tonico (15g)",
       weaponLevel: "Arma Nv{level}",
@@ -123,7 +126,7 @@ const PT_BR_RESOURCE = deepMerge(EN_RESOURCE, {
     floorHub: {
       floorLabel: "Andar {floor}/{total}",
       roomsSearched: "Salas vasculhadas: {count}",
-      activeLuck: "Sorte ativa: {luck} ({tier})",
+      activeLuck: "Sorte ativa: {luck}",
       bottomHint: "Este e o fundo. Aqui paga melhor e tambem mata melhor.",
       depthHint: "Ficar em cima e mais seguro. Descer paga melhor e bate mais forte.",
       hintDefault: "Os corredores se dividem entre pedra umida e trevo podre.",

@@ -527,6 +527,37 @@ describe("Loot, Luck & Liability", () => {
     expect(await screen.findByRole("heading", { name: /Choose a Fortune Hunt/i })).toBeInTheDocument();
   });
 
+  it("shows a yellow town warning above half health but does not block departure", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 3,
+        view: "shop",
+        p: { hp: 30, mhp: 50, atk: 5, def: 2, gold: 25, wlv: 1, alv: 1, pot: 0, luck: 0 },
+        inv: [],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    expect(screen.getByText(/You are heading out a little light\./i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Chase the Green Dark" }));
+
+    expect(await screen.findByRole("heading", { name: /Choose a Fortune Hunt/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Leave town while hurt\?/i)).not.toBeInTheDocument();
+  });
+
   it("goes straight to dungeon selection when leaving town at full health", async () => {
     const user = userEvent.setup();
 
@@ -566,6 +597,7 @@ describe("Loot, Luck & Liability", () => {
     const payload = JSON.parse(window.render_game_to_text());
 
     expect(payload.departureWarningOpen).toBe(true);
+    expect(payload.townDepartureState).toBe("critical");
     expect(payload.locale).toBe("en");
     expect(payload.localeSource).toBe("auto");
     expect(payload.story.latest).toBe("The snug eyes your bandages suspiciously.");

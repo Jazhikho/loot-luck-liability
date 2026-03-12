@@ -74,12 +74,15 @@ const JA_RESOURCE = deepMerge(EN_RESOURCE, {
     },
     shop: {
       heading: "仲買人の酒場",
-      hurtTitle: "まだ傷だらけです。",
-      hurtBody:
+      criticalTitle: "まだ傷だらけです。",
+      criticalBody:
         "HP {hp}/{maxHp}。このまま町を出ると緑の闇が先に殴ってきます。炉辺で休めば次の潜行前に全快します。",
+      cautionTitle: "少し心もとないまま出発します。",
+      cautionBody:
+        "HP {hp}/{maxHp}。出発はできますが、この体力帯はまともな無茶者でも先にトニックを買い足すところです。",
       luckSummary: "基礎運 {baseLuck}。現在運 {activeLuck}。手持ちの幸運荷物: {luckyCargo}。",
-      luckBand: "現在帯: {band}。次は {next}。",
-      luckBandMax: "現在帯: {band}。もう天井があるふりすらしていません。",
+      luckBand: "次の運の節目は {next} です。",
+      luckBandMax: "運はもう天井があるふりすらしていません。",
       cashIn: "まとめ売り ({gold}g)",
       tonic: "トニック (15g)",
       weaponLevel: "武器 Lv{level}",
@@ -123,7 +126,7 @@ const JA_RESOURCE = deepMerge(EN_RESOURCE, {
     floorHub: {
       floorLabel: "{floor}/{total} 階",
       roomsSearched: "探索済み部屋: {count}",
-      activeLuck: "現在運: {luck} ({tier})",
+      activeLuck: "現在運: {luck}",
       bottomHint: "ここが最深部。報酬も最大、死に方も最大です。",
       depthHint: "上層は安全、深層は高報酬で高火力です。",
       hintDefault: "湿った石と腐ったクローバーの匂いの中で通路が分かれます。",
