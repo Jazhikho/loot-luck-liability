@@ -49,6 +49,7 @@ import {
   decorateMonsterEncounter,
   decorateTrapOutcome,
   decorateTravelOutcome,
+  getNextLuckBand,
   getLuckTier,
 } from "./utils/LuckPresentation.js";
 import { makeId, pick, rand, LS } from "./utils/Helpers.js";
@@ -111,6 +112,7 @@ export default function Game() {
   const armorBonus = getArmorUpgradeBenefit();
   const storyEntries = log.slice(-4);
   const latestStory = storyEntries.at(-1) || null;
+  const nextLuckBand = getNextLuckBand(currentLuck);
   const localizeDangerLabel = useCallback((danger) => t(`ui.danger.${danger.key}`) || danger.label, [t]);
 
   const clearPendingDeath = useCallback(() => {
@@ -124,6 +126,22 @@ export default function Game() {
   const alog = useCallback((msg, type = "normal") => {
     setLog((current) => [...current.slice(-80), { msg, type, id: makeId("log") }]);
   }, []);
+
+  const alogDecorated = useCallback(
+    (outcome, type = "normal") => {
+      if (!outcome?.message) return;
+      alog(outcome.message, type);
+      if (outcome.bannerLabel && outcome.systemNotice) {
+        alog(t("ui.gameLog.cosmeticNotice", { label: outcome.bannerLabel, text: outcome.systemNotice }), "dim");
+      } else if (outcome.systemNotice) {
+        alog(outcome.systemNotice, "dim");
+      }
+      if (outcome.narratorAside) {
+        alog(outcome.narratorAside, "dim");
+      }
+    },
+    [alog, t]
+  );
 
   const updLt = useCallback((updates) => {
     setLt((prev) => {
@@ -278,7 +296,8 @@ export default function Game() {
   useEffect(() => {
     if (!loaded.current) return;
     if (currentLuck > ltRef.current.bestLuck) updLt({ bestLuck: currentLuck });
-  }, [currentLuck, updLt]);
+    if (luckTier.key === "luck-event-horizon") tryUnlock("event_horizon");
+  }, [currentLuck, luckTier.key, tryUnlock, updLt]);
 
   useEffect(() => () => clearPendingDeath(), [clearPendingDeath]);
 
@@ -303,7 +322,20 @@ export default function Game() {
           luckyItemCount,
           lockedCount: lockedItemCount,
         },
+        luckBand: {
+          key: luckTier.key,
+          label: t(`ui.luckTier.${luckTier.key}`) || luckTier.label,
+          phase: luckTier.phase,
+          surfaceLevel: luckTier.surfaceLevel,
+        },
         luckTier: luckTier.key,
+        nextLuckBand: nextLuckBand
+          ? {
+              key: nextLuckBand.key,
+              label: t(`ui.luckTier.${nextLuckBand.key}`) || nextLuckBand.label,
+              min: nextLuckBand.min,
+            }
+          : null,
         dungeon: dng
           ? {
               id: dng.id,
@@ -319,6 +351,9 @@ export default function Game() {
               name: foe.name,
               displayName: foe.displayName || foe.name,
               title: foe.encounterTitle || "",
+              bannerLabel: foe.bannerLabel || "",
+              cosmeticSubtitle: foe.cosmeticSubtitle || "",
+              systemNotice: foe.systemNotice || "",
               hp: foe.hp,
               maxHp: foe.maxHp,
               atk: foe.atk,
@@ -342,7 +377,7 @@ export default function Game() {
       delete window.render_game_to_text;
       delete window.advanceTime;
     };
-  }, [view, p, inv, dng, fl, rooms, enteredFloors, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier, log, departureWarningOpen, locale, localeSource, afterFight]);
+  }, [view, p, inv, dng, fl, rooms, enteredFloors, foe, rs, currentLuck, luckyItemCount, lockedItemCount, luckTier, nextLuckBand, log, departureWarningOpen, locale, localeSource, afterFight, t]);
 
   const recordHs = useCallback(() => {
     const entry = {
@@ -562,11 +597,14 @@ export default function Game() {
         def: 1 + tier,
       };
       const encounter = decorateMonsterEncounter({ monster: tollGoblin, floor: 0, rooms: 0 }, currentLuck);
-      alog(encounter.message, "bad");
+      alogDecorated(encounter, "bad");
       setFoe({
         ...tollGoblin,
         displayName: encounter.displayName,
         encounterTitle: encounter.encounterTitle,
+        bannerLabel: encounter.bannerLabel || "",
+        cosmeticSubtitle: encounter.cosmeticSubtitle || "",
+        systemNotice: encounter.systemNotice || "",
       });
       setAfterFight(
         direction === "to"
@@ -579,25 +617,25 @@ export default function Game() {
 
     if (roll < 50) {
       const quiet = decorateTravelOutcome({ kind: "quiet" }, currentLuck);
-      alog(quiet.message, "info");
+      alogDecorated(quiet, "info");
     } else if (roll < 65) {
       const loot = rollLoot(1, 1, 0);
       const decoratedLoot = decorateLootOutcome({ item: loot, source: "road" }, currentLuck);
-      alog(decoratedLoot.message, "ok");
+      alogDecorated(decoratedLoot, "ok");
       setInv((current) => [...current, loot]);
       updLt({ items: ltRef.current.items + 1 });
     } else if (roll < 80) {
       const potionGift = decorateTravelOutcome({ kind: "potion" }, currentLuck);
-      alog(potionGift.message, "ok");
+      alogDecorated(potionGift, "ok");
       setP((prev) => ({ ...prev, pot: prev.pot + 1 }));
     } else if (roll < 90 && direction === "back" && inv.length > 0) {
       const lostItem = pick(inv);
       const mishap = decorateTravelOutcome({ kind: "loss", item: lostItem }, currentLuck);
       setInv((current) => current.filter((item) => item.id !== lostItem.id));
-      alog(mishap.message, "bad");
+      alogDecorated(mishap, "bad");
     } else {
       const nothing = decorateTravelOutcome({ kind: "none" }, currentLuck);
-      alog(nothing.message, "info");
+      alogDecorated(nothing, "info");
     }
 
     return false;
@@ -624,11 +662,14 @@ export default function Game() {
       if (roll < monsterChance) {
         const monster = spawnMonster(floor, dungeon.tier, roomNumber);
         const encounter = decorateMonsterEncounter({ monster, floor, rooms: roomNumber }, currentLuck);
-        alog(encounter.message, "bad");
+        alogDecorated(encounter, "bad");
         setFoe({
           ...monster,
           displayName: encounter.displayName,
           encounterTitle: encounter.encounterTitle,
+          bannerLabel: encounter.bannerLabel || "",
+          cosmeticSubtitle: encounter.cosmeticSubtitle || "",
+          systemNotice: encounter.systemNotice || "",
         });
         setAfterFight({ type: "floorHub", forcedEntry: forceEntry });
         setView("combat");
@@ -638,7 +679,7 @@ export default function Game() {
       if (roll < monsterChance + lootChance) {
         const loot = rollLoot(floor, dungeon.tier, roomNumber);
         const decoratedLoot = decorateLootOutcome({ item: loot, source: "room" }, currentLuck);
-        alog(decoratedLoot.message, "ok");
+        alogDecorated(decoratedLoot, "ok");
         setInv((current) => {
           const next = [...current, loot];
           if (next.length >= 10) tryUnlock("hoarder");
@@ -655,10 +696,10 @@ export default function Game() {
         const nextHp = Math.max(0, p.hp - damage);
         const trap = decorateTrapOutcome({ damage, fatal: nextHp <= 0 }, currentLuck);
         setP((prev) => ({ ...prev, hp: nextHp }));
-        alog(trap.message, "bad");
+        alogDecorated(trap, "bad");
         if (nextHp <= 0) {
           const death = decorateDeathOutcome({ cause: "trap" }, currentLuck);
-          alog(death.message, "bad");
+          alogDecorated(death, "bad");
           queueDeath(t("ui.gameLog.trapDeathPending"));
           return;
         }
@@ -667,7 +708,7 @@ export default function Game() {
       }
 
       const empty = decorateEmptyRoomOutcome({ baseText: pick(emptyRooms) }, currentLuck);
-      alog(empty.message, "info");
+      alogDecorated(empty, "info");
       setView("floorHub");
     },
     [alog, currentLuck, emptyRooms, exploreFlavor, p.hp, queueDeath, t, tryUnlock, updLt, updRs]
@@ -753,19 +794,19 @@ export default function Game() {
       { targetId: foe.id, targetName: foe.displayName || foe.name, damage: playerDamage, highRoll: attackBonus === 2 },
       currentLuck
     );
-    alog(attack.message, "hit");
+    alogDecorated(attack, "hit");
 
     if (foeHp <= 0) {
       const nextAfterFight = getAfterFightType(afterFight);
       const completedDungeon = getAfterFightCompletion(afterFight);
       const defeat = decorateEnemyDefeatOutcome({ foeId: foe.id, foeName: foe.displayName || foe.name }, currentLuck);
-      alog(defeat.message, "ok");
+      alogDecorated(defeat, "ok");
       handleKill();
 
       if (Math.random() < 0.6) {
         const loot = rollLoot(fl || 1, dng?.tier || 1, rooms);
         const decoratedLoot = decorateLootOutcome({ item: loot, source: "drop" }, currentLuck);
-        alog(decoratedLoot.message, "ok");
+        alogDecorated(decoratedLoot, "ok");
         setInv((current) => {
           const next = [...current, loot];
           if (next.length >= 10) tryUnlock("hoarder");
@@ -796,12 +837,12 @@ export default function Game() {
       { attackerId: foe.id, attackerName: foe.displayName || foe.name, damage: enemyDamage },
       currentLuck
     );
-    alog(enemyAttack.message, "bad");
+    alogDecorated(enemyAttack, "bad");
 
     if (nextPlayerHp <= 0) {
       setP((prev) => ({ ...prev, hp: 0 }));
       const death = decorateDeathOutcome({ cause: "combat", foeName: foe.displayName || foe.name }, currentLuck);
-      alog(death.message, "bad");
+      alogDecorated(death, "bad");
       queueDeath(t("ui.gameLog.combatDeathPending"));
       return;
     }
@@ -851,11 +892,17 @@ export default function Game() {
       currentLuck
     );
     alog(t("ui.gameLog.fleeFailed", { attack: enemyAttack.message }), "bad");
+    if (enemyAttack.systemNotice) {
+      alog(enemyAttack.systemNotice, "dim");
+    }
+    if (enemyAttack.narratorAside) {
+      alog(enemyAttack.narratorAside, "dim");
+    }
 
     if (p.hp - enemyDamage <= 0) {
       setP((prev) => ({ ...prev, hp: 0 }));
       const death = decorateDeathOutcome({ cause: "flee", foeName: foe.displayName || foe.name }, currentLuck);
-      alog(death.message, "bad");
+      alogDecorated(death, "bad");
       queueDeath(t("ui.gameLog.fleeDeathPending"));
       return;
     }
@@ -1003,6 +1050,8 @@ export default function Game() {
               upgCost={upgCost}
               luckCost={getLuckUpgradeCost(p.luck)}
               currentLuck={currentLuck}
+              luckBand={luckTier}
+              nextLuckBand={nextLuckBand}
               luckyItemCount={luckyItemCount}
               sellableTotal={sellableTotal}
               lockedCount={lockedItemCount}

@@ -21,6 +21,8 @@ import { useI18n } from "../i18n/index.jsx";
  *   upgCost: (lvl: number) => number,
  *   luckCost: number,
  *   currentLuck: number,
+ *   luckBand: { key: string, label: string },
+ *   nextLuckBand: { key: string, label: string, min: number } | null,
  *   luckyItemCount: number,
  *   sellableTotal: number,
  *   lockedCount: number,
@@ -44,6 +46,8 @@ export function ShopView({
   upgCost,
   luckCost,
   currentLuck,
+  luckBand,
+  nextLuckBand,
   luckyItemCount,
   sellableTotal,
   lockedCount,
@@ -62,6 +66,11 @@ export function ShopView({
           <p className="text-sm italic text-emerald-100/70">&quot;{mQuote}&quot;</p>
           <p className="mt-2 text-xs text-slate-400">
             {t("ui.shop.luckSummary", { baseLuck: p.luck, activeLuck: currentLuck, luckyCargo: luckyItemCount })}
+          </p>
+          <p className="mt-1 text-xs text-emerald-200/80">
+            {nextLuckBand
+              ? t("ui.shop.luckBand", { band: t(`ui.luckTier.${luckBand.key}`) || luckBand.label, next: nextLuckBand.min })
+              : t("ui.shop.luckBandMax", { band: t(`ui.luckTier.${luckBand.key}`) || luckBand.label })}
           </p>
         </div>
         {p.hp < p.mhp && (

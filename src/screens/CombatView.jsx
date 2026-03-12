@@ -30,9 +30,13 @@ export function CombatView({ foe, p, doAttack, usePot, doFlee, pendingDeath = nu
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="shrink-0 text-center">
+        {foe.bannerLabel && (
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-200/90">{foe.bannerLabel}</p>
+        )}
         {foe.encounterTitle && <p className="text-xs uppercase tracking-[0.25em] text-amber-300">{foe.encounterTitle}</p>}
         <div className="mb-1 text-6xl">{foe.emoji}</div>
         <h2 className="text-lg font-bold text-yellow-100">{foeName}</h2>
+        {foe.cosmeticSubtitle && <p className="mt-1 text-xs text-cyan-100/80">{foe.cosmeticSubtitle}</p>}
         <div className="mx-auto mt-2 max-w-xs">
           <Bar cur={foe.hp} max={foe.maxHp} label={t("ui.combat.enemyHp")} c="bg-rose-500" />
         </div>

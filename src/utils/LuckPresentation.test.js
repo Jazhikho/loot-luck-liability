@@ -29,9 +29,15 @@ describe("LuckPresentation", () => {
 
   it("maps the published luck tiers correctly", () => {
     expect(getLuckTier(0).key).toBe("grounded");
-    expect(getLuckTier(2).key).toBe("fortunate");
-    expect(getLuckTier(5).key).toBe("uncanny");
-    expect(getLuckTier(8).key).toBe("clover-cursed");
+    expect(getLuckTier(5).key).toBe("fortunate");
+    expect(getLuckTier(10).key).toBe("uncanny");
+    expect(getLuckTier(20).key).toBe("clover-cursed");
+    expect(getLuckTier(35).key).toBe("reality-slippery");
+    expect(getLuckTier(73).key).toBe("probability-fraud");
+    expect(getLuckTier(80).key).toBe("narrative-leak");
+    expect(getLuckTier(110).key).toBe("engine-haunted");
+    expect(getLuckTier(145).key).toBe("patch-note-saint");
+    expect(getLuckTier(185).key).toBe("luck-event-horizon");
   });
 
   it("gives every monster at least ten lines per monster-driven event pool", () => {
@@ -86,10 +92,10 @@ describe("LuckPresentation", () => {
     };
 
     const grounded = decorateMonsterEncounter(encounter, 0);
-    const cursed = decorateMonsterEncounter(encounter, 8);
+    const cursed = decorateMonsterEncounter(encounter, 145);
 
     expect(grounded.monster).toEqual(cursed.monster);
-    expect(cursed.encounterTitle).toBe("Lucky Find!");
+    expect(cursed.encounterTitle).toMatch(/Lucky Find|Patch Blessing|Hotfixed Encounter/i);
     expect(grounded.encounterTitle).toBe("");
   });
 
@@ -100,35 +106,45 @@ describe("LuckPresentation", () => {
         floor: 1,
         rooms: 1,
       },
-      8
+      145
     );
-    const enemyAttack = decorateEnemyAttackOutcome({ attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 4 }, 8);
-    const defeat = decorateEnemyDefeatOutcome({ foeId: "pub_goblin", foeName: "Pub Goblin" }, 8);
+    const enemyAttack = decorateEnemyAttackOutcome({ attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 4 }, 145);
+    const defeat = decorateEnemyDefeatOutcome({ foeId: "pub_goblin", foeName: "Pub Goblin" }, 145);
 
-    expect(encounter.message).toMatch(/Dev|seed|patch|analytics|geometry|QA/i);
-    expect(enemyAttack.message).toMatch(/RNG|Dev|seed|frame|engine|patch/i);
-    expect(defeat.message).toMatch(/Dev|RNG|patch|analytics|metrics|bug report|tooltips|intended behavior|joke landed/i);
+    expect([encounter.message, encounter.bannerLabel, encounter.systemNotice, encounter.cosmeticSubtitle].join(" ")).toMatch(
+      /Dev|seed|patch|analytics|geometry|QA|FORTUNE|PATCH/i
+    );
+    expect([enemyAttack.message, enemyAttack.systemNotice].join(" ")).toMatch(/RNG|Dev|seed|frame|engine|patch/i);
+    expect([defeat.message, defeat.systemNotice, defeat.narratorAside].join(" ")).toMatch(
+      /Dev|RNG|patch|analytics|metrics|bug report|tooltips|intended behavior|joke landed|patch/i
+    );
   });
 
   it("adds more varied absurd text to travel, traps, and empty rooms at high luck", () => {
-    const travel = decorateTravelOutcome({ kind: "potion" }, 8);
-    const trap = decorateTrapOutcome({ damage: 9, fatal: false }, 8);
-    const empty = decorateEmptyRoomOutcome({ baseText: "Only dust waits here." }, 8);
+    const travel = decorateTravelOutcome({ kind: "potion" }, 185);
+    const trap = decorateTrapOutcome({ damage: 9, fatal: false }, 185);
+    const empty = decorateEmptyRoomOutcome({ baseText: "Only dust waits here." }, 185);
 
-    expect(travel.message).toMatch(/universe|loading-screen|spawn|destiny|potion/i);
-    expect(trap.message).toMatch(/barrel|stage cue|physics|hardware/i);
-    expect(empty.message).toMatch(/Dev|comedian|reality|hilarious/i);
+    expect([travel.message, travel.systemNotice, travel.narratorAside].join(" ")).toMatch(
+      /universe|loading-screen|spawn|destiny|fortune|cause and effect|bug report/i
+    );
+    expect([trap.message, trap.systemNotice, trap.narratorAside].join(" ")).toMatch(
+      /barrel|stage cue|physics|hardware|engine|fortune|patch/i
+    );
+    expect([empty.message, empty.systemNotice, empty.narratorAside].join(" ")).toMatch(
+      /Dev|comedian|reality|hilarious|universe|spec/i
+    );
   });
 
   it("only reframes already-resolved death outcomes", () => {
     const death = { cause: "trap", foeName: null };
 
     const grounded = decorateDeathOutcome(death, 0);
-    const cursed = decorateDeathOutcome(death, 8);
+    const cursed = decorateDeathOutcome(death, 185);
 
     expect(grounded.cause).toBe("trap");
     expect(cursed.cause).toBe("trap");
-    expect(cursed.message).toMatch(/gold|lucky/i);
+    expect([cursed.message, cursed.systemNotice, cursed.narratorAside].join(" ")).toMatch(/gold|lucky|fortune|reality/i);
   });
 
   it("keeps grounded banter out of fourth-wall mode at low luck", () => {
@@ -146,7 +162,7 @@ describe("LuckPresentation", () => {
         floor: 2,
         rooms: 2,
       },
-      8
+      145
     );
 
     expect(encounter.message).toMatch(/Dev|sala|algoritmo|semilla|fortuna|clip/i);

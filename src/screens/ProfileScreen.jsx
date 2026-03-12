@@ -24,6 +24,8 @@ export function ProfileScreen({
   const { t } = useI18n();
   const [confirmReset, setConfirmReset] = useState(false);
   const achievements = getAchievementDefs();
+  const visibleAchievements = achievements.filter((achievement) => !achievement.hidden || ach.includes(achievement.id));
+  const unlockedVisibleCount = visibleAchievements.filter((achievement) => ach.includes(achievement.id)).length;
 
   const statRows = [
     [t("ui.profile.statLabels.gold"), `${lt.gold}g`],
@@ -105,16 +107,18 @@ export function ProfileScreen({
             <div className="h-full overflow-y-auto pr-1" data-testid="achievements-panel">
               <div className="space-y-3">
                 <h2 className="text-base font-bold text-yellow-100">
-                  {t("ui.profile.achievementsTitle", { count: ach.length, total: achievements.length })}
+                  {t("ui.profile.achievementsTitle", { count: unlockedVisibleCount, total: visibleAchievements.length })}
                 </h2>
                 <div className="h-2 w-full rounded-full bg-slate-700">
                   <div
                     className="h-2 rounded-full bg-emerald-500 transition-all"
-                    style={{ width: `${(ach.length / achievements.length) * 100}%` }}
+                    style={{
+                      width: `${visibleAchievements.length > 0 ? (unlockedVisibleCount / visibleAchievements.length) * 100 : 0}%`,
+                    }}
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  {achievements.map((achievement) => {
+                  {visibleAchievements.map((achievement) => {
                     const hasAchievement = ach.includes(achievement.id);
                     return (
                       <div
@@ -126,9 +130,11 @@ export function ProfileScreen({
                         <span className="text-2xl">{hasAchievement ? achievement.e : t("ui.common.locked")}</span>
                         <div>
                           <p className={`text-sm font-bold ${hasAchievement ? "text-yellow-200" : "text-slate-400"}`}>
-                            {achievement.name}
+                            {hasAchievement ? achievement.name : achievement.hidden ? t("ui.common.hiddenAchievement") : achievement.name}
                           </p>
-                          <p className="text-xs text-slate-400">{achievement.desc}</p>
+                          <p className="text-xs text-slate-400">
+                            {hasAchievement ? achievement.desc : achievement.hidden ? "???" : achievement.desc}
+                          </p>
                         </div>
                         {hasAchievement && <span className="ml-auto text-xs font-bold text-emerald-300">{t("ui.profile.done")}</span>}
                       </div>

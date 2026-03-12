@@ -1,5 +1,11 @@
 # Version History
 
+## 1.7.2.0 - 2026-03-11
+
+- Replaced the old four-step luck cap with a ten-band absurdity ladder, including new high-luck cosmetic surfaces and a hidden achievement for reaching the top band.
+- Expanded language support to surfaced regional Spanish choices, plus Brazilian Portuguese and Japanese, with browser autodetect and locale fallback chains.
+- Extended combat/log/render-state output so the richer luck-band metadata, cosmetic encounter labels, and locale-aware presentation survive saves and testing.
+
 ## 1.7.1.3 - 2026-03-11
 
 - Removed the separate floor-only `Dungeon Commentary` panel and routed floor narration through the main `Rumors & Wreckage` log instead.

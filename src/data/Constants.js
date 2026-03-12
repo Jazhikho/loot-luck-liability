@@ -84,6 +84,7 @@ export const ACHDEFS = [
   { id: "thorough", name: "Thorough Explorer", desc: "Explore 8+ rooms on one floor", e: "\u{1F50D}" },
   { id: "persistent", name: "Cockroach", desc: "Die 5 times total", e: "\u{1FAB2}" },
   { id: "upgraded", name: "Arms Dealer", desc: "Reach weapon or armor level 5", e: "\u{1F528}" },
+  { id: "event_horizon", name: "Luck Event Horizon", desc: "Reach the highest possible luck band", e: "\u{1F31F}", hidden: true },
 ];
 
 export const GREETINGS = [

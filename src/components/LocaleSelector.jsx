@@ -1,4 +1,5 @@
 import { useI18n } from "../i18n/index.jsx";
+import { MANUAL_LOCALE_OPTIONS } from "../i18n/localeMetadata.js";
 
 /**
  * Compact locale control for auto-detect or explicit language override.
@@ -9,8 +10,10 @@ export function LocaleSelector({ compact = false }) {
 
   const options = [
     { id: "auto", label: t("ui.locale.auto") },
-    { id: "en", label: t("ui.locale.english") },
-    { id: "es", label: t("ui.locale.spanish") },
+    ...MANUAL_LOCALE_OPTIONS.map((option) => ({
+      id: option.id,
+      label: t(option.labelKey),
+    })),
   ];
 
   return (

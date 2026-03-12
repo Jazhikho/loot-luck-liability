@@ -7,11 +7,107 @@ import {
   getNestedDialogueEntries,
 } from "../i18n/dialogueResources.js";
 
-const LUCK_TIERS = [
-  { key: "grounded", label: "Grounded", max: 1, absurdChance: 0 },
-  { key: "fortunate", label: "Fortunate", max: 4, absurdChance: 35 },
-  { key: "uncanny", label: "Uncanny", max: 7, absurdChance: 70 },
-  { key: "clover-cursed", label: "Clover-Cursed", max: Number.POSITIVE_INFINITY, absurdChance: 100 },
+export const LUCK_BANDS = [
+  {
+    key: "grounded",
+    label: "Grounded",
+    min: 0,
+    max: 4,
+    phase: "tone",
+    absurdChance: 0,
+    surfaceLevel: 0,
+    toneKey: "grounded",
+  },
+  {
+    key: "fortunate",
+    label: "Fortunate",
+    min: 5,
+    max: 9,
+    phase: "tone",
+    absurdChance: 20,
+    surfaceLevel: 0,
+    toneKey: "fortunate",
+  },
+  {
+    key: "uncanny",
+    label: "Uncanny",
+    min: 10,
+    max: 19,
+    phase: "tone",
+    absurdChance: 40,
+    surfaceLevel: 0,
+    toneKey: "uncanny",
+  },
+  {
+    key: "clover-cursed",
+    label: "Clover-Cursed",
+    min: 20,
+    max: 34,
+    phase: "tone",
+    absurdChance: 60,
+    surfaceLevel: 0,
+    toneKey: "clover-cursed",
+  },
+  {
+    key: "reality-slippery",
+    label: "Reality-Slippery",
+    min: 35,
+    max: 54,
+    phase: "tone",
+    absurdChance: 75,
+    surfaceLevel: 0,
+    toneKey: "clover-cursed",
+  },
+  {
+    key: "probability-fraud",
+    label: "Probability Fraud",
+    min: 55,
+    max: 79,
+    phase: "manifest",
+    absurdChance: 85,
+    surfaceLevel: 1,
+    toneKey: "clover-cursed",
+  },
+  {
+    key: "narrative-leak",
+    label: "Narrative Leak",
+    min: 80,
+    max: 109,
+    phase: "manifest",
+    absurdChance: 92,
+    surfaceLevel: 2,
+    toneKey: "clover-cursed",
+  },
+  {
+    key: "engine-haunted",
+    label: "Engine-Haunted",
+    min: 110,
+    max: 144,
+    phase: "manifest",
+    absurdChance: 96,
+    surfaceLevel: 3,
+    toneKey: "clover-cursed",
+  },
+  {
+    key: "patch-note-saint",
+    label: "Patch-Note Saint",
+    min: 145,
+    max: 184,
+    phase: "manifest",
+    absurdChance: 100,
+    surfaceLevel: 4,
+    toneKey: "clover-cursed",
+  },
+  {
+    key: "luck-event-horizon",
+    label: "Luck Event Horizon",
+    min: 185,
+    max: Number.POSITIVE_INFINITY,
+    phase: "manifest",
+    absurdChance: 100,
+    surfaceLevel: 5,
+    toneKey: "clover-cursed",
+  },
 ];
 
 const DIALOGUE_LIBRARY = {
@@ -209,6 +305,152 @@ function hashSeed(seed) {
   return hash;
 }
 
+function getLocaleGroup(localeId) {
+  if (localeId?.startsWith("es")) return "es";
+  if (localeId === "pt-BR") return "pt-BR";
+  if (localeId === "ja") return "ja";
+  return "en";
+}
+
+const COSMETIC_LIBRARY = {
+  en: {
+    encounterTitles: {
+      "probability-fraud": ["Lucky Find!", "Probability Fraud!", "Statistically Rude!"],
+      "narrative-leak": ["Lucky Find!", "Narrative Leak!", "Rare Scene Error!"],
+      "engine-haunted": ["Engine-Haunted!", "Lucky Find!", "Renderer Concern!"],
+      "patch-note-saint": ["Patch Blessing!", "Lucky Find!", "Hotfixed Encounter!"],
+      "luck-event-horizon": ["Luck Event Horizon!", "Lucky Find!", "Reality Lost Interest!"],
+    },
+    bannerLabels: {
+      "probability-fraud": ["FORTUNE DISPUTES THIS OUTCOME", "PROBABILITY FILED A COMPLAINT"],
+      "narrative-leak": ["SCENE INTEGRITY COMPROMISED", "CONTENT TABLE OVERRULED"],
+      "engine-haunted": ["ENGINE ACTIVITY DETECTED", "RENDERER FEELS PERSONALLY INVOLVED"],
+      "patch-note-saint": ["PATCH BLESSING APPLIED", "LIVE HOTFIX FROM SAINT CHANCE"],
+      "luck-event-horizon": ["REALITY NO LONGER ESCALATES NORMALLY", "FORTUNE HAS LEFT THE TEST ENVIRONMENT"],
+    },
+    systemNotices: {
+      "probability-fraud": ["Fortune disputes the fairness of this result.", "The seed claims it never approved this."],
+      "narrative-leak": ["The scene setup is visible from inside the scene.", "A content table coughs politely behind the wall."],
+      "engine-haunted": ["The engine is now offering creative input.", "Some offscreen system just applauded."],
+      "patch-note-saint": ["Patch notes briefly become scripture.", "A balancing pass wanders in wearing a halo."],
+      "luck-event-horizon": ["Reality submits a vague bug report and keeps moving.", "Cause and effect are now in a hostile negotiations phase."],
+    },
+    subtitles: {
+      "narrative-leak": ["The room knows it is content.", "Even the set dressing looks self-conscious."],
+      "engine-haunted": ["Everything here feels debug-adjacent.", "The lighting is doing commentary now."],
+      "patch-note-saint": ["This would read better in a changelog.", "The Dev is not beating the allegations."],
+      "luck-event-horizon": ["The joke has escaped containment.", "This would have been clearer before luck unionized."],
+    },
+    narratorAsides: {
+      "engine-haunted": ["The narrator would like hazard pay.", "Somewhere, QA just sighed through clenched teeth."],
+      "patch-note-saint": ["The next patch will deny all of this.", "The Dev did not plan for this much sincerity from chaos."],
+      "luck-event-horizon": ["The universe is now improvising beyond spec.", "The bit is driving and nobody has the brakes."],
+    },
+  },
+  es: {
+    encounterTitles: {
+      "probability-fraud": ["Hallazgo con Suerte!", "Fraude Probabilistico!", "Muy Poco Serio!"],
+      "narrative-leak": ["Filtracion Narrativa!", "Hallazgo con Suerte!", "Error de Escena!"],
+      "engine-haunted": ["Motor Embrujado!", "Hallazgo con Suerte!", "Problema de Render!"],
+      "patch-note-saint": ["Bendicion del Parche!", "Hallazgo con Suerte!", "Encuentro Hotfixeado!"],
+      "luck-event-horizon": ["Horizonte de Suerte!", "Hallazgo con Suerte!", "La Realidad Renuncio!"],
+    },
+    bannerLabels: {
+      "probability-fraud": ["LA FORTUNA IMPUGNA ESTE RESULTADO", "LA PROBABILIDAD PRESENTO QUEJA"],
+      "narrative-leak": ["LA ESCENA SE ESTA DESARMANDO", "LA TABLA DE CONTENIDO METIO MANO"],
+      "engine-haunted": ["ACTIVIDAD DEL MOTOR DETECTADA", "EL RENDER SE LO TOMA PERSONAL"],
+      "patch-note-saint": ["BENDICION DE PATCH APLICADA", "HOTFIX DIVINO EN CURSO"],
+      "luck-event-horizon": ["LA REALIDAD YA NO ESCALA NORMAL", "LA FORTUNA ABANDONO EL ENTORNO DE PRUEBA"],
+    },
+    systemNotices: {
+      "probability-fraud": ["La fortuna discute activamente este resultado.", "La semilla jura que nunca firmo esto."],
+      "narrative-leak": ["Se esta viendo el armado de la escena desde adentro.", "Una tabla de contenido tose atras de la pared."],
+      "engine-haunted": ["El motor acaba de aportar una idea malisima.", "Algun sistema fuera de camara aplaudio."],
+      "patch-note-saint": ["Las notas del parche se ponen misticas por un segundo.", "Aparecio un balance pass con aureola."],
+      "luck-event-horizon": ["La realidad entrega un bug report borroso y sigue de largo.", "La causa y el efecto estan peleados por convenio."],
+    },
+    subtitles: {
+      "narrative-leak": ["La sala sabe que es contenido.", "Hasta la escenografia parece nerviosa."],
+      "engine-haunted": ["Todo aca huele a debug.", "La iluminacion ahora comenta tambien."],
+      "patch-note-saint": ["Esto quedaria mejor en un changelog.", "El Dev no esta ayudando a su defensa."],
+      "luck-event-horizon": ["El chiste ya se fugo del corral.", "Esto era mas claro antes de que la suerte sindicalizara todo."],
+    },
+    narratorAsides: {
+      "engine-haunted": ["El narrador pide plus por insalubridad.", "En algun lado QA acaba de resoplar."],
+      "patch-note-saint": ["El proximo parche negara todo esto.", "El Dev claramente no esperaba tanta conviccion por parte del caos."],
+      "luck-event-horizon": ["El universo ya esta improvisando fuera de especificacion.", "El chiste maneja y nadie encuentra el freno."],
+    },
+  },
+  "pt-BR": {
+    encounterTitles: {
+      "probability-fraud": ["Achado Sortudo!", "Fraude Probabilistico!", "Totalmente Suspeito!"],
+      "narrative-leak": ["Vazamento Narrativo!", "Achado Sortudo!", "Cena Quebrada!"],
+      "engine-haunted": ["Engine Assombrada!", "Achado Sortudo!", "Render Nervoso!"],
+      "patch-note-saint": ["Bencao do Patch!", "Achado Sortudo!", "Encontro Hotfixado!"],
+      "luck-event-horizon": ["Horizonte da Sorte!", "Achado Sortudo!", "A Realidade Largou Mao!"],
+    },
+    bannerLabels: {
+      "probability-fraud": ["A FORTUNA CONTESTA ESTE RESULTADO", "A PROBABILIDADE ENTROU COM RECURSO"],
+      "narrative-leak": ["A CENA ESTA VAZANDO", "A TABELA DE CONTEUDO INTERVEIO"],
+      "engine-haunted": ["ATIVIDADE DE ENGINE DETECTADA", "O RENDER ESTA ENVOLVIDO EMOCIONALMENTE"],
+      "patch-note-saint": ["BENCAO DE PATCH APLICADA", "HOTFIX DIVINO EM ANDAMENTO"],
+      "luck-event-horizon": ["A REALIDADE PAROU DE ESCALAR DIREITO", "A FORTUNA SAIU DO AMBIENTE DE TESTE"],
+    },
+    systemNotices: {
+      "probability-fraud": ["A fortuna esta contestando o resultado em tempo real.", "A seed jura que nunca aprovou isso."],
+      "narrative-leak": ["A montagem da cena esta aparecendo por dentro da cena.", "Uma tabela de conteudo tossiu atras da parede."],
+      "engine-haunted": ["A engine resolveu palpitar.", "Algum sistema fora de tela acabou de bater palmas."],
+      "patch-note-saint": ["O patch note virou escritura por um segundo.", "Uma passada de balanceamento entrou usando halo."],
+      "luck-event-horizon": ["A realidade abriu um bug report vago e foi embora.", "Causa e efeito estao brigando no juridico."],
+    },
+    subtitles: {
+      "narrative-leak": ["A sala sabe que e conteudo.", "A cenografia esta constrangida."],
+      "engine-haunted": ["Tudo aqui parece estar em modo debug.", "A iluminacao agora faz comentarios."],
+      "patch-note-saint": ["Isto ficaria melhor em changelog.", "O Dev nao fala portugues, mas o caos fala."],
+      "luck-event-horizon": ["A piada saiu do recinto.", "Isto seria mais engracado em ingles, mas azar o nosso."],
+    },
+    narratorAsides: {
+      "engine-haunted": ["O narrador quer adicional de insalubridade.", "Em algum lugar, QA desistiu em silencio."],
+      "patch-note-saint": ["O proximo patch vai negar tudo.", "O Dev nao fala essa lingua, mas a piada insistiu mesmo assim."],
+      "luck-event-horizon": ["O universo agora esta improvisando sem design doc.", "A piada esta dirigindo e ninguem trouxe freio."],
+    },
+  },
+  ja: {
+    encounterTitles: {
+      "probability-fraud": ["ラッキー発見！", "確率詐欺！", "だいぶ怪しい！"],
+      "narrative-leak": ["物語漏れ！", "ラッキー発見！", "場面エラー！"],
+      "engine-haunted": ["エンジン憑依！", "ラッキー発見！", "レンダ警報！"],
+      "patch-note-saint": ["パッチ祝福！", "ラッキー発見！", "ホットフィックス遭遇！"],
+      "luck-event-horizon": ["運の事象の地平線！", "ラッキー発見！", "現実が匙を投げた！"],
+    },
+    bannerLabels: {
+      "probability-fraud": ["運がこの結果に異議を申し立てています", "確率が正式に文句を出しました"],
+      "narrative-leak": ["場面の継ぎ目が見えています", "コンテンツ表が口を出しました"],
+      "engine-haunted": ["エンジン活動検知", "レンダラが妙に本気です"],
+      "patch-note-saint": ["パッチの祝福が適用されました", "神聖ホットフィックス進行中"],
+      "luck-event-horizon": ["現実が通常運転をやめました", "幸運がテスト環境を離脱しました"],
+    },
+    systemNotices: {
+      "probability-fraud": ["幸運がこの結果に抗議中です。", "シードは承認していないと言い張っています。"],
+      "narrative-leak": ["この場面は場面の内側から組み立てが見えています。", "壁の向こうでコンテンツ表が咳払いしました。"],
+      "engine-haunted": ["エンジンが余計な創作意欲を出しています。", "画面外の何かが拍手しました。"],
+      "patch-note-saint": ["パッチノートが一瞬だけ経典になりました。", "バランス調整が後光つきで歩いてきました。"],
+      "luck-event-horizon": ["現実が雑なバグ報告だけ残して進み続けます。", "因果関係が労使交渉を始めました。"],
+    },
+    subtitles: {
+      "narrative-leak": ["この部屋は自分がコンテンツだと知っています。", "背景美術まで気まずそうです。"],
+      "engine-haunted": ["全部がデバッグ寄りです。", "照明まで実況を始めました。"],
+      "patch-note-saint": ["これは更新履歴に書いた方が早いです。", "開発者は日本語を話さないのに空気だけは読まれています。"],
+      "luck-event-horizon": ["冗談はもう隔離を突破しました。", "英語ならもう少し伝わった気がしますが、運がそうさせません。"],
+    },
+    narratorAsides: {
+      "engine-haunted": ["語り手は危険手当を要求しています。", "どこかで QA が静かに頭を抱えました。"],
+      "patch-note-saint": ["次のパッチはこの件を全面否認します。", "開発者はこの言語を話せませんが、混沌は普通に話しています。"],
+      "luck-event-horizon": ["宇宙が仕様外アドリブに入りました。", "ビットが運転席に座り、誰もブレーキを持っていません。"],
+    },
+  },
+};
+
 function pickVariant(seed, options) {
   return options[hashSeed(seed) % options.length];
 }
@@ -217,8 +459,8 @@ function formatTemplate(template, values) {
   return template.replace(/\{([^}]+)\}/g, (_, key) => `${values[key] ?? ""}`);
 }
 
-function getTierKey(luck) {
-  return getLuckTier(luck).key;
+function getToneKey(luck) {
+  return getLuckTier(luck).toneKey;
 }
 
 function pickTierText(category, tierKey, seed) {
@@ -231,14 +473,14 @@ function pickMonsterTierText(category, monsterId, tierKey, seed) {
 }
 
 function quoteFor(category, monsterId, name, salt, luck) {
-  const tierKey = getTierKey(luck);
-  return `"${pickMonsterTierText(category, monsterId, tierKey, `${salt}:${monsterId || name}:${tierKey}`)}"`;
+  const toneKey = getToneKey(luck);
+  return `"${pickMonsterTierText(category, monsterId, toneKey, `${salt}:${monsterId || name}:${toneKey}`)}"`;
 }
 
 function shouldGoAbsurd(luck, seed) {
-  const tier = getLuckTier(luck);
-  if (tier.absurdChance <= 0) return false;
-  return hashSeed(`absurd:${seed}`) % 100 < tier.absurdChance;
+  const band = getLuckTier(luck);
+  if (band.absurdChance <= 0) return false;
+  return hashSeed(`absurd:${seed}`) % 100 < band.absurdChance;
 }
 
 function getLootPrefix(source) {
@@ -246,8 +488,59 @@ function getLootPrefix(source) {
   return getLootPrefixLabel(getLocale(), source, fallback);
 }
 
+function getEffectiveToneKey(luck, seed) {
+  const band = getLuckTier(luck);
+  const toneKey = band.toneKey;
+  if (toneKey === "grounded") return toneKey;
+  if (shouldGoAbsurd(luck, seed)) return toneKey;
+  if (toneKey === "clover-cursed") return "uncanny";
+  if (toneKey === "uncanny") return "fortunate";
+  return toneKey;
+}
+
+function pickCosmeticValue(localeId, bucket, bandKey, seed) {
+  const localeGroup = getLocaleGroup(localeId);
+  const options = COSMETIC_LIBRARY[localeGroup]?.[bucket]?.[bandKey] || COSMETIC_LIBRARY.en?.[bucket]?.[bandKey];
+  if (!Array.isArray(options) || options.length === 0) return "";
+  return pickVariant(seed, options);
+}
+
+function shouldUseSurface(luck, seed, minimumLevel = 1) {
+  const band = getLuckTier(luck);
+  if (band.surfaceLevel < minimumLevel) return false;
+  const threshold = Math.min(100, 35 + band.surfaceLevel * 12);
+  return hashSeed(`surface:${seed}`) % 100 < threshold;
+}
+
+function getCosmeticFields(luck, seed, context = {}) {
+  const band = getLuckTier(luck);
+  if (band.surfaceLevel <= 0) return {};
+  const localeId = getLocale();
+  const next = {};
+  if (context.allowEncounterTitle && shouldUseSurface(luck, `${seed}:title`, 1)) {
+    next.encounterTitle = pickCosmeticValue(localeId, "encounterTitles", band.key, `${seed}:encounterTitle`);
+  }
+  if (context.allowBanner && shouldUseSurface(luck, `${seed}:banner`, 1)) {
+    next.bannerLabel = pickCosmeticValue(localeId, "bannerLabels", band.key, `${seed}:bannerLabel`);
+  }
+  if (context.allowSystemNotice && shouldUseSurface(luck, `${seed}:system`, 1)) {
+    next.systemNotice = pickCosmeticValue(localeId, "systemNotices", band.key, `${seed}:systemNotice`);
+  }
+  if (context.allowSubtitle && shouldUseSurface(luck, `${seed}:subtitle`, 2)) {
+    next.cosmeticSubtitle = pickCosmeticValue(localeId, "subtitles", band.key, `${seed}:subtitle`);
+  }
+  if (context.allowNarratorAside && shouldUseSurface(luck, `${seed}:aside`, 3)) {
+    next.narratorAside = pickCosmeticValue(localeId, "narratorAsides", band.key, `${seed}:narratorAside`);
+  }
+  return next;
+}
+
 export function getLuckTier(luck) {
-  return LUCK_TIERS.find((tier) => luck <= tier.max) || LUCK_TIERS[LUCK_TIERS.length - 1];
+  return LUCK_BANDS.find((band) => luck >= band.min && luck <= band.max) || LUCK_BANDS[LUCK_BANDS.length - 1];
+}
+
+export function getNextLuckBand(luck) {
+  return LUCK_BANDS.find((band) => band.min > luck) || null;
 }
 
 Object.assign(DIALOGUE_LIBRARY, {
@@ -596,45 +889,48 @@ Object.assign(DIALOGUE_LIBRARY, {
 });
 
 export function decorateAttackOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `attack:${outcome.targetId || outcome.targetName}:${outcome.damage}:${outcome.highRoll}:${tierKey}`;
-  const effectiveTier = outcome.highRoll && shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
+  const toneKey = getToneKey(luck);
+  const seed = `attack:${outcome.targetId || outcome.targetName}:${outcome.damage}:${outcome.highRoll}:${toneKey}`;
+  const effectiveTier = outcome.highRoll ? getEffectiveToneKey(luck, seed) : toneKey === "clover-cursed" ? "uncanny" : toneKey;
   const quote = quoteFor("hurtQuote", outcome.targetId, outcome.targetName, "hurt", luck);
   const template = pickTierText("attackNarration", effectiveTier, seed);
   return {
     ...outcome,
     message: formatTemplate(template, { target: outcome.targetName, damage: outcome.damage, quote }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
   };
 }
 
 export function decorateEnemyAttackOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `enemy-hit:${outcome.attackerId || outcome.attackerName}:${outcome.damage}:${tierKey}`;
-  const template = pickTierText("enemyAttackNarration", tierKey, seed);
+  const toneKey = getToneKey(luck);
+  const seed = `enemy-hit:${outcome.attackerId || outcome.attackerName}:${outcome.damage}:${toneKey}`;
+  const template = pickTierText("enemyAttackNarration", toneKey, seed);
   const quote = quoteFor("enemyAttackQuote", outcome.attackerId, outcome.attackerName, "enemy-attack", luck);
   return {
     ...outcome,
     message: formatTemplate(template, { attacker: outcome.attackerName, damage: outcome.damage, quote }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true }),
   };
 }
 
 export function decorateEnemyDefeatOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `enemy-defeat:${outcome.foeId || outcome.foeName}:${tierKey}`;
-  const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
+  const toneKey = getToneKey(luck);
+  const seed = `enemy-defeat:${outcome.foeId || outcome.foeName}:${toneKey}`;
+  const effectiveTier = getEffectiveToneKey(luck, seed);
   const quote = quoteFor("defeatQuote", outcome.foeId, outcome.foeName, "defeat", luck);
   const template = pickTierText("defeatNarration", effectiveTier, seed);
   return {
     ...outcome,
     message: formatTemplate(template, { foe: outcome.foeName, quote }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
   };
 }
 
 export function decorateDeathOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
+  const toneKey = getToneKey(luck);
   const cause = outcome.cause === "trap" ? "trap" : outcome.cause === "flee" ? "flee" : "combat";
-  const seed = `death:${cause}:${outcome.foeName || "none"}:${tierKey}`;
-  const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
+  const seed = `death:${cause}:${outcome.foeName || "none"}:${toneKey}`;
+  const effectiveTier = getEffectiveToneKey(luck, seed);
   const template = pickVariant(
     seed,
     getDialogueEntries(getLocale(), `deathNarration.${cause}`, effectiveTier, {
@@ -644,28 +940,45 @@ export function decorateDeathOutcome(outcome, luck) {
   return {
     ...outcome,
     message: formatTemplate(template, { foe: outcome.foeName || "the dungeon" }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
   };
 }
 
 export function decorateMonsterEncounter(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `monster:${outcome.monster.id || outcome.monster.name}:${outcome.floor}:${outcome.rooms}:${tierKey}`;
+  const toneKey = getToneKey(luck);
+  const seed = `monster:${outcome.monster.id || outcome.monster.name}:${outcome.floor}:${outcome.rooms}:${toneKey}`;
   const quote = quoteFor("encounterQuote", outcome.monster.id, outcome.monster.name, "encounter", luck);
+  const band = getLuckTier(luck);
+  const surfaces = getCosmeticFields(luck, seed, {
+    allowEncounterTitle: true,
+    allowBanner: true,
+    allowSystemNotice: true,
+    allowSubtitle: true,
+    allowNarratorAside: true,
+  });
+  const fallbackEncounterTitle =
+    (band.key === "clover-cursed" || band.surfaceLevel > 0) && shouldGoAbsurd(luck, seed)
+      ? getDialogueLabel(getLocale(), "luckyFindTitle", "Lucky Find!")
+      : "";
   return {
     ...outcome,
-    encounterTitle: luck >= 8 && shouldGoAbsurd(luck, seed) ? getDialogueLabel(getLocale(), "luckyFindTitle", "Lucky Find!") : "",
+    encounterTitle: surfaces.encounterTitle || fallbackEncounterTitle,
     displayName: outcome.monster.name,
-    message: formatTemplate(pickTierText("monsterNarration", tierKey, seed), {
+    message: formatTemplate(pickTierText("monsterNarration", toneKey, seed), {
       monster: outcome.monster.name,
       quote,
     }),
+    bannerLabel: surfaces.bannerLabel || "",
+    systemNotice: surfaces.systemNotice || "",
+    cosmeticSubtitle: surfaces.cosmeticSubtitle || "",
+    narratorAside: surfaces.narratorAside || "",
   };
 }
 
 export function decorateLootOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `loot:${outcome.source}:${outcome.item.name}:${outcome.item.rarity}:${tierKey}`;
-  const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
+  const toneKey = getToneKey(luck);
+  const seed = `loot:${outcome.source}:${outcome.item.name}:${outcome.item.rarity}:${toneKey}`;
+  const effectiveTier = getEffectiveToneKey(luck, seed);
   const template = pickTierText("lootNarration", effectiveTier, seed);
   return {
     ...outcome,
@@ -675,13 +988,19 @@ export function decorateLootOutcome(outcome, luck) {
       rarity: outcome.item.rarity,
       value: outcome.item.value,
     }),
+    ...getCosmeticFields(luck, seed, {
+      allowBanner: true,
+      allowSystemNotice: true,
+      allowSubtitle: true,
+      allowNarratorAside: true,
+    }),
   };
 }
 
 export function decorateTravelOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `travel:${outcome.kind}:${outcome.item?.name || "none"}:${tierKey}`;
-  const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
+  const toneKey = getToneKey(luck);
+  const seed = `travel:${outcome.kind}:${outcome.item?.name || "none"}:${toneKey}`;
+  const effectiveTier = getEffectiveToneKey(luck, seed);
   const template = pickVariant(
     seed,
     getDialogueEntries(getLocale(), `travelNarration.${outcome.kind}`, effectiveTier, {
@@ -691,13 +1010,14 @@ export function decorateTravelOutcome(outcome, luck) {
   return {
     ...outcome,
     message: formatTemplate(template, { item: outcome.item?.name || "your cargo" }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
   };
 }
 
 export function decorateTrapOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `trap:${outcome.damage}:${outcome.fatal}:${tierKey}`;
-  const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
+  const toneKey = getToneKey(luck);
+  const seed = `trap:${outcome.damage}:${outcome.fatal}:${toneKey}`;
+  const effectiveTier = getEffectiveToneKey(luck, seed);
   const template = pickVariant(
     seed,
     getNestedDialogueEntries(
@@ -711,15 +1031,17 @@ export function decorateTrapOutcome(outcome, luck) {
   return {
     ...outcome,
     message: formatTemplate(template, { damage: outcome.damage }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
   };
 }
 
 export function decorateEmptyRoomOutcome(outcome, luck) {
-  const tierKey = getTierKey(luck);
-  const seed = `empty:${outcome.baseText}:${tierKey}`;
-  const effectiveTier = shouldGoAbsurd(luck, seed) ? tierKey : tierKey === "clover-cursed" ? "uncanny" : tierKey;
+  const toneKey = getToneKey(luck);
+  const seed = `empty:${outcome.baseText}:${toneKey}`;
+  const effectiveTier = getEffectiveToneKey(luck, seed);
   return {
     ...outcome,
     message: formatTemplate(pickTierText("emptyRoomNarration", effectiveTier, seed), { baseText: outcome.baseText }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
   };
 }

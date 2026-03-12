@@ -42,7 +42,7 @@ describe("i18n scaffold", () => {
     setBrowserLanguage("es-MX");
     resetLocaleState();
 
-    expect(getLocale()).toBe("es");
+    expect(getLocale()).toBe("es-LA");
     expect(getLocaleSource()).toBe("auto");
     expect(t("ui.title.startAdventure")).toMatch(/Empezar/i);
   });
@@ -68,11 +68,11 @@ describe("i18n scaffold", () => {
     expect(lootPools.legendary.some((item) => /Recibo|Sacacorchos|Sello/.test(item.n))).toBe(true);
   });
 
-  it("falls back to English when a placeholder locale has no translation yet", () => {
+  it("surfaces Japanese copy when Japanese is selected", () => {
     setLocalePreference("ja");
 
-    expect(t("ui.title.creditsLabel")).toBe("Credits");
-    expect(t("content.loot.receipt_from_the_end_of_the_rainbow.name")).toBe("Receipt from the End of the Rainbow");
+    expect(t("ui.title.creditsLabel")).toBe("クレジット");
+    expect(t("content.dungeons.clover_cellar.name")).toBe("クローバーの地下蔵");
   });
 
   it("keeps localized content lookups valid under a placeholder locale", () => {
@@ -105,7 +105,7 @@ describe("i18n scaffold", () => {
       const module = await import("./resources.js");
 
       expect(module.resources.en.ui.locale.spanish).toBe("Español");
-      expect(module.resources.es.ui.combatWarnings.risky).toMatch(/Estás en rojo/i);
+      expect(module.resources.es.ui.combatWarnings.risky).toMatch(/Estas en rojo/i);
     } finally {
       globalThis.Buffer = originalBuffer;
     }

@@ -1,5 +1,11 @@
 import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
-import { DEFAULT_LOCALE, resources, SUPPORTED_LOCALES } from "./resources.js";
+import { resources } from "./resources.js";
+import {
+  DEFAULT_LOCALE,
+  getLocaleChain,
+  resolveAutoLocale,
+  SUPPORTED_LOCALES,
+} from "./localeMetadata.js";
 
 const LOCALE_PREF_KEY = "ll_locale_pref";
 const AUTO_MODE = "auto";
@@ -12,7 +18,7 @@ function canUseBrowser() {
 function resolveBrowserLocale() {
   if (typeof navigator === "undefined") return DEFAULT_LOCALE;
   const browserLocale = navigator.language || navigator.languages?.[0] || DEFAULT_LOCALE;
-  return browserLocale.toLowerCase().startsWith("es") ? "es" : DEFAULT_LOCALE;
+  return resolveAutoLocale(browserLocale);
 }
 
 function readStoredPreference() {
@@ -111,8 +117,13 @@ export function resetLocaleState() {
 }
 
 export function getLocaleValue(key, localeId = localeState.locale) {
-  const localized = getNestedValue(resources[localeId] || {}, key);
-  if (localized !== undefined) return localized;
+  const chain = getLocaleChain(localeId);
+
+  for (const currentLocale of chain) {
+    const localized = getNestedValue(resources[currentLocale] || {}, key);
+    if (localized !== undefined) return localized;
+  }
+
   return getNestedValue(resources[DEFAULT_LOCALE], key);
 }
 

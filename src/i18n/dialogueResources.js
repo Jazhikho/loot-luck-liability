@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./resources.js";
+import { DEFAULT_LOCALE, getLocaleChain, SUPPORTED_LOCALES } from "./localeMetadata.js";
 
 const localeSkeleton = () => ({
   labels: {},
@@ -464,46 +464,72 @@ dialogueResources.es = {
   monsterQuotes: buildMonsterQuoteLibrary("es"),
 };
 
+dialogueResources["pt-BR"] = {
+  labels: {
+    luckyFindTitle: "Achado Sortudo!",
+  },
+  lootPrefixes: {
+    road: "Saque achado na estrada:",
+    drop: "Saque derrubado:",
+    default: "Saque encontrado:",
+  },
+  library: {},
+  monsterQuotes: {},
+};
+
+dialogueResources.ja = {
+  labels: {
+    luckyFindTitle: "ラッキー発見！",
+  },
+  lootPrefixes: {
+    road: "道端で見つけた戦利品:",
+    drop: "落とした戦利品:",
+    default: "見つけた戦利品:",
+  },
+  library: {},
+  monsterQuotes: {},
+};
+
+function getLocaleChainValues(localeId, accessor) {
+  for (const currentLocale of getLocaleChain(localeId)) {
+    const value = accessor(dialogueResources[currentLocale]);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
 export function getDialogueEntries(localeId, category, tierKey, fallbackLibrary) {
-  const localized = dialogueResources[localeId]?.library?.[category]?.[tierKey];
+  const localized = getLocaleChainValues(localeId, (resource) => resource?.library?.[category]?.[tierKey]);
   if (Array.isArray(localized) && localized.length > 0) return localized;
-
-  const english = dialogueResources[DEFAULT_LOCALE]?.library?.[category]?.[tierKey];
-  if (Array.isArray(english) && english.length > 0) return english;
-
   return fallbackLibrary[category][tierKey];
 }
 
 export function getMonsterDialogueEntries(localeId, monsterId, category, tierKey, fallbackEntries) {
-  const localized = dialogueResources[localeId]?.monsterQuotes?.[monsterId]?.[category]?.[tierKey];
+  const localized = getLocaleChainValues(
+    localeId,
+    (resource) => resource?.monsterQuotes?.[monsterId]?.[category]?.[tierKey]
+  );
   if (Array.isArray(localized) && localized.length > 0) return localized;
-
-  const english = dialogueResources[DEFAULT_LOCALE]?.monsterQuotes?.[monsterId]?.[category]?.[tierKey];
-  if (Array.isArray(english) && english.length > 0) return english;
-
   return fallbackEntries;
 }
 
 export function getNestedDialogueEntries(localeId, category, key, tierKey, fallbackLibrary) {
-  const localized = dialogueResources[localeId]?.library?.[category]?.[tierKey]?.[key];
+  const localized = getLocaleChainValues(
+    localeId,
+    (resource) => resource?.library?.[category]?.[tierKey]?.[key]
+  );
   if (Array.isArray(localized) && localized.length > 0) return localized;
-
-  const english = dialogueResources[DEFAULT_LOCALE]?.library?.[category]?.[tierKey]?.[key];
-  if (Array.isArray(english) && english.length > 0) return english;
-
   return fallbackLibrary[category][tierKey][key];
 }
 
 export function getDialogueLabel(localeId, key, fallback) {
-  return dialogueResources[localeId]?.labels?.[key] || dialogueResources[DEFAULT_LOCALE]?.labels?.[key] || fallback;
+  return getLocaleChainValues(localeId, (resource) => resource?.labels?.[key]) || fallback;
 }
 
 export function getLootPrefixLabel(localeId, source, fallback) {
   return (
-    dialogueResources[localeId]?.lootPrefixes?.[source] ||
-    dialogueResources[DEFAULT_LOCALE]?.lootPrefixes?.[source] ||
-    dialogueResources[localeId]?.lootPrefixes?.default ||
-    dialogueResources[DEFAULT_LOCALE]?.lootPrefixes?.default ||
+    getLocaleChainValues(localeId, (resource) => resource?.lootPrefixes?.[source]) ||
+    getLocaleChainValues(localeId, (resource) => resource?.lootPrefixes?.default) ||
     fallback
   );
 }

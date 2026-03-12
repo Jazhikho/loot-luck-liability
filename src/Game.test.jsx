@@ -125,17 +125,17 @@ describe("Loot, Luck & Liability", () => {
     expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();
   });
 
-  it("lets the player manually switch between English and Spanish from the title screen", async () => {
+  it("lets the player manually switch between English and surfaced Spanish locales from the title screen", async () => {
     const user = userEvent.setup();
 
     renderWithI18n(<TitleScreen toasts={[]} continueGame={vi.fn()} newGame={vi.fn()} goProfile={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: "Start Adventuring" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Espa/i }));
+    await user.click(screen.getByRole("button", { name: /Latinoam/i }));
 
     expect(screen.getByRole("button", { name: /Empezar/i })).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem("ll_locale_pref"))).toEqual({ source: "manual", locale: "es" });
+    expect(JSON.parse(localStorage.getItem("ll_locale_pref"))).toEqual({ source: "manual", locale: "es-LA" });
   });
 
   it("requires confirmation before deleting all data", async () => {
@@ -387,7 +387,10 @@ describe("Loot, Luck & Liability", () => {
     expect(payload.player.luck).toBe(1);
     expect(payload.inventory.luckTotal).toBe(2);
     expect(payload.inventory.luckyItemCount).toBe(1);
-    expect(payload.luckTier).toBe("fortunate");
+    expect(payload.luckTier).toBe("grounded");
+    expect(payload.luckBand.key).toBe("grounded");
+    expect(payload.nextLuckBand.key).toBe("fortunate");
+    expect(payload.nextLuckBand.min).toBe(5);
   });
 
   it("shows newly discovered procedural dungeons after enough unlocks", async () => {
@@ -567,5 +570,34 @@ describe("Loot, Luck & Liability", () => {
     expect(payload.localeSource).toBe("auto");
     expect(payload.story.latest).toBe("The snug eyes your bandages suspiciously.");
     expect(payload.story.recent).toContain("The snug eyes your bandages suspiciously.");
+  });
+
+  it("unlocks the hidden top-tier luck achievement when a run reaches the highest band", async () => {
+    localStorage.setItem(
+      "ll_save",
+      JSON.stringify({
+        version: 3,
+        view: "shop",
+        p: { hp: 50, mhp: 50, atk: 5, def: 2, gold: 10, wlv: 1, alv: 1, pot: 2, luck: 185 },
+        inv: [],
+        dng: null,
+        fl: 0,
+        rooms: 0,
+        foe: null,
+        af: null,
+        unlocked: [1, 2],
+        rs: { earned: 0, slain: 0, deepest: 0, rooms: 0, clears: 0 },
+        log: [],
+      })
+    );
+    const user = userEvent.setup();
+
+    render(<Game />);
+
+    await screen.findByRole("heading", { name: "The Broker's Snug" });
+    await user.click(screen.getByRole("button", { name: "Ledger" }));
+    await user.click(screen.getByRole("button", { name: "Achievements" }));
+
+    expect(await screen.findByText("Luck Event Horizon")).toBeInTheDocument();
   });
 });
