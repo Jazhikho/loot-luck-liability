@@ -451,8 +451,11 @@ const COSMETIC_LIBRARY = {
   },
 };
 
-function pickVariant(seed, options) {
-  return options[hashSeed(seed) % options.length];
+function pickVariant(seed, options, sequence = 0) {
+  if (!Array.isArray(options) || options.length === 0) return "";
+  const baseIndex = hashSeed(seed) % options.length;
+  const rotation = sequence > 0 ? sequence % options.length : 0;
+  return options[(baseIndex + rotation) % options.length];
 }
 
 function formatTemplate(template, values) {
@@ -463,18 +466,28 @@ function getToneKey(luck) {
   return getLuckTier(luck).toneKey;
 }
 
-function pickTierText(category, tierKey, seed) {
-  return pickVariant(seed, getDialogueEntries(getLocale(), category, tierKey, DIALOGUE_LIBRARY));
+function pickTierText(category, tierKey, seed, sequence = 0) {
+  return pickVariant(seed, getDialogueEntries(getLocale(), category, tierKey, DIALOGUE_LIBRARY), sequence);
 }
 
-function pickMonsterTierText(category, monsterId, tierKey, seed) {
+function pickMonsterTierText(category, monsterId, tierKey, seed, sequence = 0) {
   const fallbackEntries = getDialogueEntries(getLocale(), category, tierKey, DIALOGUE_LIBRARY);
-  return pickVariant(seed, getMonsterDialogueEntries(getLocale(), monsterId, category, tierKey, fallbackEntries));
+  return pickVariant(
+    seed,
+    getMonsterDialogueEntries(getLocale(), monsterId, category, tierKey, fallbackEntries),
+    sequence
+  );
 }
 
-function quoteFor(category, monsterId, name, salt, luck) {
+function quoteFor(category, monsterId, name, salt, luck, sequence = 0) {
   const toneKey = getToneKey(luck);
-  return `"${pickMonsterTierText(category, monsterId, toneKey, `${salt}:${monsterId || name}:${toneKey}`)}"`;
+  return `"${pickMonsterTierText(
+    category,
+    monsterId,
+    toneKey,
+    `${salt}:${monsterId || name}:${toneKey}`,
+    sequence
+  )}"`;
 }
 
 function shouldGoAbsurd(luck, seed) {
@@ -498,11 +511,11 @@ function getEffectiveToneKey(luck, seed) {
   return toneKey;
 }
 
-function pickCosmeticValue(localeId, bucket, bandKey, seed) {
+function pickCosmeticValue(localeId, bucket, bandKey, seed, sequence = 0) {
   const localeGroup = getLocaleGroup(localeId);
   const options = COSMETIC_LIBRARY[localeGroup]?.[bucket]?.[bandKey] || COSMETIC_LIBRARY.en?.[bucket]?.[bandKey];
   if (!Array.isArray(options) || options.length === 0) return "";
-  return pickVariant(seed, options);
+  return pickVariant(seed, options, sequence);
 }
 
 function shouldUseSurface(luck, seed, minimumLevel = 1) {
@@ -516,21 +529,22 @@ function getCosmeticFields(luck, seed, context = {}) {
   const band = getLuckTier(luck);
   if (band.surfaceLevel <= 0) return {};
   const localeId = getLocale();
+  const sequence = context.sequence || 0;
   const next = {};
   if (context.allowEncounterTitle && shouldUseSurface(luck, `${seed}:title`, 1)) {
-    next.encounterTitle = pickCosmeticValue(localeId, "encounterTitles", band.key, `${seed}:encounterTitle`);
+    next.encounterTitle = pickCosmeticValue(localeId, "encounterTitles", band.key, `${seed}:encounterTitle`, sequence);
   }
   if (context.allowBanner && shouldUseSurface(luck, `${seed}:banner`, 1)) {
-    next.bannerLabel = pickCosmeticValue(localeId, "bannerLabels", band.key, `${seed}:bannerLabel`);
+    next.bannerLabel = pickCosmeticValue(localeId, "bannerLabels", band.key, `${seed}:bannerLabel`, sequence);
   }
   if (context.allowSystemNotice && shouldUseSurface(luck, `${seed}:system`, 1)) {
-    next.systemNotice = pickCosmeticValue(localeId, "systemNotices", band.key, `${seed}:systemNotice`);
+    next.systemNotice = pickCosmeticValue(localeId, "systemNotices", band.key, `${seed}:systemNotice`, sequence);
   }
   if (context.allowSubtitle && shouldUseSurface(luck, `${seed}:subtitle`, 2)) {
-    next.cosmeticSubtitle = pickCosmeticValue(localeId, "subtitles", band.key, `${seed}:subtitle`);
+    next.cosmeticSubtitle = pickCosmeticValue(localeId, "subtitles", band.key, `${seed}:subtitle`, sequence);
   }
   if (context.allowNarratorAside && shouldUseSurface(luck, `${seed}:aside`, 3)) {
-    next.narratorAside = pickCosmeticValue(localeId, "narratorAsides", band.key, `${seed}:narratorAside`);
+    next.narratorAside = pickCosmeticValue(localeId, "narratorAsides", band.key, `${seed}:narratorAside`, sequence);
   }
   return next;
 }
@@ -890,44 +904,48 @@ Object.assign(DIALOGUE_LIBRARY, {
 
 export function decorateAttackOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `attack:${outcome.targetId || outcome.targetName}:${outcome.damage}:${outcome.highRoll}:${toneKey}`;
   const effectiveTier = outcome.highRoll ? getEffectiveToneKey(luck, seed) : toneKey === "clover-cursed" ? "uncanny" : toneKey;
-  const quote = quoteFor("hurtQuote", outcome.targetId, outcome.targetName, "hurt", luck);
-  const template = pickTierText("attackNarration", effectiveTier, seed);
+  const quote = quoteFor("hurtQuote", outcome.targetId, outcome.targetName, "hurt", luck, sequence);
+  const template = pickTierText("attackNarration", effectiveTier, seed, sequence);
   return {
     ...outcome,
     message: formatTemplate(template, { target: outcome.targetName, damage: outcome.damage, quote }),
-    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true, sequence }),
   };
 }
 
 export function decorateEnemyAttackOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `enemy-hit:${outcome.attackerId || outcome.attackerName}:${outcome.damage}:${toneKey}`;
-  const template = pickTierText("enemyAttackNarration", toneKey, seed);
-  const quote = quoteFor("enemyAttackQuote", outcome.attackerId, outcome.attackerName, "enemy-attack", luck);
+  const template = pickTierText("enemyAttackNarration", toneKey, seed, sequence);
+  const quote = quoteFor("enemyAttackQuote", outcome.attackerId, outcome.attackerName, "enemy-attack", luck, sequence);
   return {
     ...outcome,
     message: formatTemplate(template, { attacker: outcome.attackerName, damage: outcome.damage, quote }),
-    ...getCosmeticFields(luck, seed, { allowSystemNotice: true }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, sequence }),
   };
 }
 
 export function decorateEnemyDefeatOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `enemy-defeat:${outcome.foeId || outcome.foeName}:${toneKey}`;
   const effectiveTier = getEffectiveToneKey(luck, seed);
-  const quote = quoteFor("defeatQuote", outcome.foeId, outcome.foeName, "defeat", luck);
-  const template = pickTierText("defeatNarration", effectiveTier, seed);
+  const quote = quoteFor("defeatQuote", outcome.foeId, outcome.foeName, "defeat", luck, sequence);
+  const template = pickTierText("defeatNarration", effectiveTier, seed, sequence);
   return {
     ...outcome,
     message: formatTemplate(template, { foe: outcome.foeName, quote }),
-    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true, sequence }),
   };
 }
 
 export function decorateDeathOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const cause = outcome.cause === "trap" ? "trap" : outcome.cause === "flee" ? "flee" : "combat";
   const seed = `death:${cause}:${outcome.foeName || "none"}:${toneKey}`;
   const effectiveTier = getEffectiveToneKey(luck, seed);
@@ -935,19 +953,21 @@ export function decorateDeathOutcome(outcome, luck) {
     seed,
     getDialogueEntries(getLocale(), `deathNarration.${cause}`, effectiveTier, {
       [`deathNarration.${cause}`]: DIALOGUE_LIBRARY.deathNarration[cause],
-    })
+    }),
+    sequence
   );
   return {
     ...outcome,
     message: formatTemplate(template, { foe: outcome.foeName || "the dungeon" }),
-    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true, sequence }),
   };
 }
 
 export function decorateMonsterEncounter(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `monster:${outcome.monster.id || outcome.monster.name}:${outcome.floor}:${outcome.rooms}:${toneKey}`;
-  const quote = quoteFor("encounterQuote", outcome.monster.id, outcome.monster.name, "encounter", luck);
+  const quote = quoteFor("encounterQuote", outcome.monster.id, outcome.monster.name, "encounter", luck, sequence);
   const band = getLuckTier(luck);
   const surfaces = getCosmeticFields(luck, seed, {
     allowEncounterTitle: true,
@@ -955,6 +975,7 @@ export function decorateMonsterEncounter(outcome, luck) {
     allowSystemNotice: true,
     allowSubtitle: true,
     allowNarratorAside: true,
+    sequence,
   });
   const fallbackEncounterTitle =
     (band.key === "clover-cursed" || band.surfaceLevel > 0) && shouldGoAbsurd(luck, seed)
@@ -964,7 +985,7 @@ export function decorateMonsterEncounter(outcome, luck) {
     ...outcome,
     encounterTitle: surfaces.encounterTitle || fallbackEncounterTitle,
     displayName: outcome.monster.name,
-    message: formatTemplate(pickTierText("monsterNarration", toneKey, seed), {
+    message: formatTemplate(pickTierText("monsterNarration", toneKey, seed, sequence), {
       monster: outcome.monster.name,
       quote,
     }),
@@ -977,9 +998,10 @@ export function decorateMonsterEncounter(outcome, luck) {
 
 export function decorateLootOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `loot:${outcome.source}:${outcome.item.name}:${outcome.item.rarity}:${toneKey}`;
   const effectiveTier = getEffectiveToneKey(luck, seed);
-  const template = pickTierText("lootNarration", effectiveTier, seed);
+  const template = pickTierText("lootNarration", effectiveTier, seed, sequence);
   return {
     ...outcome,
     message: formatTemplate(template, {
@@ -993,29 +1015,33 @@ export function decorateLootOutcome(outcome, luck) {
       allowSystemNotice: true,
       allowSubtitle: true,
       allowNarratorAside: true,
+      sequence,
     }),
   };
 }
 
 export function decorateTravelOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `travel:${outcome.kind}:${outcome.item?.name || "none"}:${toneKey}`;
   const effectiveTier = getEffectiveToneKey(luck, seed);
   const template = pickVariant(
     seed,
     getDialogueEntries(getLocale(), `travelNarration.${outcome.kind}`, effectiveTier, {
       [`travelNarration.${outcome.kind}`]: DIALOGUE_LIBRARY.travelNarration[outcome.kind],
-    })
+    }),
+    sequence
   );
   return {
     ...outcome,
     message: formatTemplate(template, { item: outcome.item?.name || "your cargo" }),
-    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true, sequence }),
   };
 }
 
 export function decorateTrapOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `trap:${outcome.damage}:${outcome.fatal}:${toneKey}`;
   const effectiveTier = getEffectiveToneKey(luck, seed);
   const template = pickVariant(
@@ -1026,22 +1052,24 @@ export function decorateTrapOutcome(outcome, luck) {
       outcome.fatal ? "fatal" : "live",
       effectiveTier,
       DIALOGUE_LIBRARY
-    )
+    ),
+    sequence
   );
   return {
     ...outcome,
     message: formatTemplate(template, { damage: outcome.damage }),
-    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true, sequence }),
   };
 }
 
 export function decorateEmptyRoomOutcome(outcome, luck) {
   const toneKey = getToneKey(luck);
+  const sequence = outcome.sequence || 0;
   const seed = `empty:${outcome.baseText}:${toneKey}`;
   const effectiveTier = getEffectiveToneKey(luck, seed);
   return {
     ...outcome,
-    message: formatTemplate(pickTierText("emptyRoomNarration", effectiveTier, seed), { baseText: outcome.baseText }),
-    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true }),
+    message: formatTemplate(pickTierText("emptyRoomNarration", effectiveTier, seed, sequence), { baseText: outcome.baseText }),
+    ...getCosmeticFields(luck, seed, { allowSystemNotice: true, allowNarratorAside: true, sequence }),
   };
 }

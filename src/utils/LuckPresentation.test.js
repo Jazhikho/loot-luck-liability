@@ -73,6 +73,28 @@ describe("LuckPresentation", () => {
     ).toBe(decorateEnemyAttackOutcome({ attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 4 }, 5).message);
   });
 
+  it("rotates combat quotes across consecutive turns when a sequence is provided", () => {
+    const firstAttack = decorateAttackOutcome(
+      { targetId: "pub_goblin", targetName: "Pub Goblin", damage: 3, highRoll: false, sequence: 1 },
+      0
+    );
+    const secondAttack = decorateAttackOutcome(
+      { targetId: "pub_goblin", targetName: "Pub Goblin", damage: 3, highRoll: false, sequence: 3 },
+      0
+    );
+    const firstEnemy = decorateEnemyAttackOutcome(
+      { attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 1, sequence: 2 },
+      0
+    );
+    const secondEnemy = decorateEnemyAttackOutcome(
+      { attackerId: "pub_goblin", attackerName: "Pub Goblin", damage: 1, sequence: 4 },
+      0
+    );
+
+    expect(firstAttack.message).not.toBe(secondAttack.message);
+    expect(firstEnemy.message).not.toBe(secondEnemy.message);
+  });
+
   it("keeps loot payloads identical across luck tiers", () => {
     const loot = { item: { name: "Receipt", value: 185, rarity: "legendary" }, source: "drop" };
 

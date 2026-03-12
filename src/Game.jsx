@@ -97,6 +97,7 @@ export default function Game() {
   const achRef = useRef([]);
   const rsRef = useRef(DEF_RS);
   const deathTimerRef = useRef(null);
+  const narrationSequenceRef = useRef(0);
 
   const currentLuck = getCurrentLuck(p, inv);
   const emptyRooms = getEmptyRooms();
@@ -121,6 +122,11 @@ export default function Game() {
       deathTimerRef.current = null;
     }
     setPendingDeath(null);
+  }, []);
+
+  const nextNarrationSequence = useCallback(() => {
+    narrationSequenceRef.current += 1;
+    return narrationSequenceRef.current;
   }, []);
 
   const alog = useCallback((msg, type = "normal") => {
@@ -195,6 +201,7 @@ export default function Game() {
   );
 
   const loadSaveIntoState = useCallback((save) => {
+    narrationSequenceRef.current = save.log?.length || 0;
     setDepartureWarningOpen(false);
     setView(save.view || "shop");
     setP(save.p || DEF_P);
@@ -445,6 +452,7 @@ export default function Game() {
 
   const resetRun = useCallback(() => {
     clearPendingDeath();
+    narrationSequenceRef.current = 0;
     setDepartureWarningOpen(false);
     setP({ ...DEF_P });
     setInv([]);
@@ -596,7 +604,10 @@ export default function Game() {
         atk: 3 + tier * 2,
         def: 1 + tier,
       };
-      const encounter = decorateMonsterEncounter({ monster: tollGoblin, floor: 0, rooms: 0 }, currentLuck);
+      const encounter = decorateMonsterEncounter(
+        { monster: tollGoblin, floor: 0, rooms: 0, sequence: nextNarrationSequence() },
+        currentLuck
+      );
       alogDecorated(encounter, "bad");
       setFoe({
         ...tollGoblin,
@@ -616,25 +627,25 @@ export default function Game() {
     }
 
     if (roll < 50) {
-      const quiet = decorateTravelOutcome({ kind: "quiet" }, currentLuck);
+      const quiet = decorateTravelOutcome({ kind: "quiet", sequence: nextNarrationSequence() }, currentLuck);
       alogDecorated(quiet, "info");
     } else if (roll < 65) {
       const loot = rollLoot(1, 1, 0);
-      const decoratedLoot = decorateLootOutcome({ item: loot, source: "road" }, currentLuck);
+      const decoratedLoot = decorateLootOutcome({ item: loot, source: "road", sequence: nextNarrationSequence() }, currentLuck);
       alogDecorated(decoratedLoot, "ok");
       setInv((current) => [...current, loot]);
       updLt({ items: ltRef.current.items + 1 });
     } else if (roll < 80) {
-      const potionGift = decorateTravelOutcome({ kind: "potion" }, currentLuck);
+      const potionGift = decorateTravelOutcome({ kind: "potion", sequence: nextNarrationSequence() }, currentLuck);
       alogDecorated(potionGift, "ok");
       setP((prev) => ({ ...prev, pot: prev.pot + 1 }));
     } else if (roll < 90 && direction === "back" && inv.length > 0) {
       const lostItem = pick(inv);
-      const mishap = decorateTravelOutcome({ kind: "loss", item: lostItem }, currentLuck);
+      const mishap = decorateTravelOutcome({ kind: "loss", item: lostItem, sequence: nextNarrationSequence() }, currentLuck);
       setInv((current) => current.filter((item) => item.id !== lostItem.id));
       alogDecorated(mishap, "bad");
     } else {
-      const nothing = decorateTravelOutcome({ kind: "none" }, currentLuck);
+      const nothing = decorateTravelOutcome({ kind: "none", sequence: nextNarrationSequence() }, currentLuck);
       alogDecorated(nothing, "info");
     }
 
@@ -661,7 +672,10 @@ export default function Game() {
 
       if (roll < monsterChance) {
         const monster = spawnMonster(floor, dungeon.tier, roomNumber);
-        const encounter = decorateMonsterEncounter({ monster, floor, rooms: roomNumber }, currentLuck);
+        const encounter = decorateMonsterEncounter(
+          { monster, floor, rooms: roomNumber, sequence: nextNarrationSequence() },
+          currentLuck
+        );
         alogDecorated(encounter, "bad");
         setFoe({
           ...monster,
@@ -678,7 +692,7 @@ export default function Game() {
 
       if (roll < monsterChance + lootChance) {
         const loot = rollLoot(floor, dungeon.tier, roomNumber);
-        const decoratedLoot = decorateLootOutcome({ item: loot, source: "room" }, currentLuck);
+        const decoratedLoot = decorateLootOutcome({ item: loot, source: "room", sequence: nextNarrationSequence() }, currentLuck);
         alogDecorated(decoratedLoot, "ok");
         setInv((current) => {
           const next = [...current, loot];
@@ -694,11 +708,11 @@ export default function Game() {
       if (roll < monsterChance + lootChance + trapChance) {
         const damage = rand(3 + floor, 6 + dungeon.tier * 2 + floor + Math.floor(roomNumber / 2));
         const nextHp = Math.max(0, p.hp - damage);
-        const trap = decorateTrapOutcome({ damage, fatal: nextHp <= 0 }, currentLuck);
+        const trap = decorateTrapOutcome({ damage, fatal: nextHp <= 0, sequence: nextNarrationSequence() }, currentLuck);
         setP((prev) => ({ ...prev, hp: nextHp }));
         alogDecorated(trap, "bad");
         if (nextHp <= 0) {
-          const death = decorateDeathOutcome({ cause: "trap" }, currentLuck);
+          const death = decorateDeathOutcome({ cause: "trap", sequence: nextNarrationSequence() }, currentLuck);
           alogDecorated(death, "bad");
           queueDeath(t("ui.gameLog.trapDeathPending"));
           return;
@@ -707,11 +721,11 @@ export default function Game() {
         return;
       }
 
-      const empty = decorateEmptyRoomOutcome({ baseText: pick(emptyRooms) }, currentLuck);
+      const empty = decorateEmptyRoomOutcome({ baseText: pick(emptyRooms), sequence: nextNarrationSequence() }, currentLuck);
       alogDecorated(empty, "info");
       setView("floorHub");
     },
-    [alog, currentLuck, emptyRooms, exploreFlavor, p.hp, queueDeath, t, tryUnlock, updLt, updRs]
+    [alog, currentLuck, emptyRooms, exploreFlavor, nextNarrationSequence, p.hp, queueDeath, t, tryUnlock, updLt, updRs]
   );
 
   const startJourney = (dungeonData) => {
@@ -791,7 +805,13 @@ export default function Game() {
     const playerDamage = Math.max(1, p.atk - foe.def + attackBonus);
     const foeHp = foe.hp - playerDamage;
     const attack = decorateAttackOutcome(
-      { targetId: foe.id, targetName: foe.displayName || foe.name, damage: playerDamage, highRoll: attackBonus === 2 },
+      {
+        targetId: foe.id,
+        targetName: foe.displayName || foe.name,
+        damage: playerDamage,
+        highRoll: attackBonus === 2,
+        sequence: nextNarrationSequence(),
+      },
       currentLuck
     );
     alogDecorated(attack, "hit");
@@ -799,13 +819,16 @@ export default function Game() {
     if (foeHp <= 0) {
       const nextAfterFight = getAfterFightType(afterFight);
       const completedDungeon = getAfterFightCompletion(afterFight);
-      const defeat = decorateEnemyDefeatOutcome({ foeId: foe.id, foeName: foe.displayName || foe.name }, currentLuck);
+      const defeat = decorateEnemyDefeatOutcome(
+        { foeId: foe.id, foeName: foe.displayName || foe.name, sequence: nextNarrationSequence() },
+        currentLuck
+      );
       alogDecorated(defeat, "ok");
       handleKill();
 
       if (Math.random() < 0.6) {
         const loot = rollLoot(fl || 1, dng?.tier || 1, rooms);
-        const decoratedLoot = decorateLootOutcome({ item: loot, source: "drop" }, currentLuck);
+        const decoratedLoot = decorateLootOutcome({ item: loot, source: "drop", sequence: nextNarrationSequence() }, currentLuck);
         alogDecorated(decoratedLoot, "ok");
         setInv((current) => {
           const next = [...current, loot];
@@ -834,14 +857,17 @@ export default function Game() {
     const enemyDamage = Math.max(1, foe.atk - p.def + rand(-1, 2));
     const nextPlayerHp = p.hp - enemyDamage;
     const enemyAttack = decorateEnemyAttackOutcome(
-      { attackerId: foe.id, attackerName: foe.displayName || foe.name, damage: enemyDamage },
+      { attackerId: foe.id, attackerName: foe.displayName || foe.name, damage: enemyDamage, sequence: nextNarrationSequence() },
       currentLuck
     );
     alogDecorated(enemyAttack, "bad");
 
     if (nextPlayerHp <= 0) {
       setP((prev) => ({ ...prev, hp: 0 }));
-      const death = decorateDeathOutcome({ cause: "combat", foeName: foe.displayName || foe.name }, currentLuck);
+      const death = decorateDeathOutcome(
+        { cause: "combat", foeName: foe.displayName || foe.name, sequence: nextNarrationSequence() },
+        currentLuck
+      );
       alogDecorated(death, "bad");
       queueDeath(t("ui.gameLog.combatDeathPending"));
       return;
@@ -888,7 +914,7 @@ export default function Game() {
 
     const enemyDamage = Math.max(1, foe.atk - p.def + rand(0, 2));
     const enemyAttack = decorateEnemyAttackOutcome(
-      { attackerId: foe.id, attackerName: foe.displayName || foe.name, damage: enemyDamage },
+      { attackerId: foe.id, attackerName: foe.displayName || foe.name, damage: enemyDamage, sequence: nextNarrationSequence() },
       currentLuck
     );
     alog(t("ui.gameLog.fleeFailed", { attack: enemyAttack.message }), "bad");
@@ -901,7 +927,10 @@ export default function Game() {
 
     if (p.hp - enemyDamage <= 0) {
       setP((prev) => ({ ...prev, hp: 0 }));
-      const death = decorateDeathOutcome({ cause: "flee", foeName: foe.displayName || foe.name }, currentLuck);
+      const death = decorateDeathOutcome(
+        { cause: "flee", foeName: foe.displayName || foe.name, sequence: nextNarrationSequence() },
+        currentLuck
+      );
       alogDecorated(death, "bad");
       queueDeath(t("ui.gameLog.fleeDeathPending"));
       return;

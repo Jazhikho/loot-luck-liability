@@ -1,5 +1,10 @@
 # Version History
 
+## 1.8.0.1 - 2026-03-11
+
+- Fixed combat and encounter narration rotation so repeated actions draw from the dialogue pool instead of reusing the same line back-to-back.
+- Threaded runtime narration sequencing through combat, trap, loot, travel, and room commentary, with regression coverage for consecutive-turn variety.
+
 ## 1.8.0.0 - 2026-03-11
 
 - Replaced the old four-step luck cap with a ten-band absurdity ladder, including new high-luck cosmetic surfaces and a hidden achievement for reaching the top band.
