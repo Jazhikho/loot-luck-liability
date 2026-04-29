@@ -2,6 +2,12 @@
 
 Loot, Luck & Liability is a browser-first roguelite about diving into cursed fortune holes, hauling back questionable treasure, and surviving increasingly ridiculous luck-driven narration.
 
+## AI-Assisted Development Note
+
+AI tools were used for bounded support tasks such as code scaffolding, refactoring suggestions, test drafting, documentation support, localization alternatives, and structured ideation. Gameplay design, balance, validation, integration, final edits, localization approval, and release approval remained human-led. No AI-assisted output was shipped without human review and substantive revision or testing.
+
+For workflow and provenance details, see [AI-Use-Statement.md](/D:/Game Creation/LootAndLiability/AI-Use-Statement.md), [AI-Provenance-Log.md](/D:/Game Creation/LootAndLiability/AI-Provenance-Log.md), and [CONTRIBUTING.md](/D:/Game Creation/LootAndLiability/CONTRIBUTING.md).
+
 ## Platforms
 
 - Web
